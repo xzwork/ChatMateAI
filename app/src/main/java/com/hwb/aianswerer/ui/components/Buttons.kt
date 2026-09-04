@@ -103,14 +103,7 @@ fun AnimatedButton(
                         }
                         .clip(shape)
                         .drawBehind {
-                            drawRoundRect(
-                                brush = Brush.linearGradient(
-                                    colors = listOf(t.p, if (isDark) t.pd else t.pe),
-                                    start = Offset(0f, 0f),
-                                    end = Offset(size.width, size.height)
-                                ),
-                                cornerRadius = CornerRadius(BtnRadius.toPx())
-                            )
+                            drawRoundRect(color = t.p, cornerRadius = CornerRadius(BtnRadius.toPx()))
                         }
                     ButtonVariant.Glass -> if (isDark)
                         Modifier.glassSurfaceDark(shape = shape, cornerRadius = BtnRadius, shadowElevation = shadowPx)

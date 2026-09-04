@@ -1,8 +1,11 @@
 package com.hwb.aianswerer
 
 import android.Manifest
+import android.app.StatusBarManager
+import android.content.ComponentName
 import android.content.Context
 import android.content.Intent
+import android.graphics.drawable.Icon
 import android.net.Uri
 import android.os.Build
 import android.os.Bundle
@@ -12,55 +15,39 @@ import android.widget.Toast
 import androidx.activity.compose.setContent
 import androidx.activity.result.contract.ActivityResultContracts
 import androidx.core.content.ContextCompat
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.runtime.Composable
 import androidx.compose.runtime.getValue
 import androidx.compose.runtime.mutableStateOf
 import androidx.compose.runtime.setValue
-import androidx.compose.ui.Modifier
-import androidx.compose.ui.res.stringResource
-import androidx.compose.ui.tooling.preview.Preview
 import com.hwb.aianswerer.config.AppConfig
-import com.hwb.aianswerer.ui.components.PremiumDialog
 import com.hwb.aianswerer.utils.AppLog
-import com.hwb.aianswerer.ui.dialogs.LanguageSelectionDialog
-import com.hwb.aianswerer.ui.dialogs.ModelSetupReminderDialog
 import com.hwb.aianswerer.ui.pages.HomePage
 import com.hwb.aianswerer.ui.theme.sandboxTheme
 import com.hwb.aianswerer.ui.theme.*
 
 class MainActivity : BaseActivity() {
 
+    companion object {
+        const val EXTRA_START_FROM_QUICK_TILE = "start_from_quick_tile"
+        const val EXTRA_REQUEST_SCREEN_CAPTURE = "request_screen_capture"
+    }
+
     private var isAnswerModeActive by mutableStateOf(false)
-    private var showStopConfirmDialog by mutableStateOf(false)
     private var screenCaptureResultCode: Int? = null
     private var screenCaptureData: Intent? = null
     private var selectedQuestionTypes by mutableStateOf<Set<String>>(emptySet())
     private var cropMode by mutableStateOf(AppConfig.CROP_MODE_FULL)
-
-    // Dialog state
-    private var showLanguageDialog by mutableStateOf(false)
-    private var showModelSetupDialog by mutableStateOf(false)
-    private val dialogQueue = DialogQueue(
-        showLanguageDialog = { showLanguageDialog },
-        setShowLanguageDialog = { showLanguageDialog = it },
-        showModelSetupDialog = { showModelSetupDialog },
-        setShowModelSetupDialog = { showModelSetupDialog = it },
-        restartActivity = {
-            val intent = Intent(this, MainActivity::class.java)
-            intent.flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TASK
-            startActivity(intent)
-            finish()
-        },
-        navigateToSettings = {
-            startActivity(Intent(this, com.hwb.aianswerer.providers.ProviderSettingsActivity::class.java))
-        }
-    )
+    private var captureMode by mutableStateOf(AppConfig.CAPTURE_MODE_HYBRID)
+    private var screenCaptureUserChoice by mutableStateOf(false)
+    private var hasAccessibilityPermission by mutableStateOf(false)
+    private var hasOverlayPermission by mutableStateOf(false)
+    private var hasNotificationPermission by mutableStateOf(true)
+    private var startAfterNotificationPermission = false
+    private var isRequestingCapturePermission = false
 
     private val screenCaptureLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) { result ->
+        isRequestingCapturePermission = false
         if (result.resultCode == RESULT_OK) {
             screenCaptureResultCode = result.resultCode
             screenCaptureData = result.data
@@ -74,18 +61,16 @@ class MainActivity : BaseActivity() {
     private val notificationPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.RequestPermission()
     ) {
-        // Whether the user grants or denies, continue the start flow. If denied,
-        // NotificationHelper.ensurePermission already logs a warning and the foreground
-        // service may be killed by the system after a timeout — but we don't block.
-        proceedWithStartFlow()
+        refreshPermissionState()
+        if (startAfterNotificationPermission) proceedWithStartFlow()
+        startAfterNotificationPermission = false
     }
 
     private val overlayPermissionLauncher = registerForActivityResult(
         ActivityResultContracts.StartActivityForResult()
     ) {
         if (checkOverlayPermission()) {
-            if (screenCaptureResultCode != null) startAnswerMode()
-            else requestScreenCapturePermission()
+            continueAfterOverlayPermission()
         } else {
             Toast.makeText(this, getString(R.string.toast_permission_overlay_required), Toast.LENGTH_LONG).show()
         }
@@ -96,60 +81,88 @@ class MainActivity : BaseActivity() {
 
         selectedQuestionTypes = AppConfig.getQuestionTypes()
         cropMode = AppConfig.getCropMode()
-        dialogQueue.checkAndQueueDialogs()
-
+        captureMode = AppConfig.getCaptureMode()
+        screenCaptureUserChoice = AppConfig.getScreenCaptureUserChoice()
+        refreshPermissionState()
         setContent {
             val t = sandboxTheme()
-            Box(Modifier.fillMaxSize()) {
-                HomePage(
-                    t = t,
-                    onSettingsClick = { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) },
-                    onStartClick = { checkAndRequestPermissions() },
-                    isAnswerModeActive = isAnswerModeActive,
-                    onStopClick = { showStopConfirmDialog = true }
-                )
+            HomePage(
+                t = t,
+                onSettingsClick = { startActivity(Intent(this@MainActivity, SettingsActivity::class.java)) },
+                onApiConfigClick = { startActivity(Intent(this@MainActivity, ModelSettingsActivity::class.java)) },
+                onSystemPromptClick = { startActivity(Intent(this@MainActivity, com.hwb.aianswerer.chat.ui.SystemPromptSettingsActivity::class.java)) },
+                onConversationsClick = { startActivity(Intent(this@MainActivity, com.hwb.aianswerer.chat.ui.ChatSettingsActivity::class.java)) },
+                onAccessibilityPermissionClick = { startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS)) },
+                onOverlayPermissionClick = { requestOverlayPermission() },
+                onNotificationPermissionClick = { requestNotificationPermission() },
+                onStartClick = { checkAndRequestPermissions() },
+                captureMode = captureMode,
+                onCaptureModeChange = {
+                    captureMode = it
+                    AppConfig.saveCaptureMode(it)
+                },
+                screenCaptureUserChoice = screenCaptureUserChoice,
+                onScreenCaptureUserChoiceChange = {
+                    screenCaptureUserChoice = it
+                    AppConfig.saveScreenCaptureUserChoice(it)
+                },
+                hasAccessibilityPermission = hasAccessibilityPermission,
+                hasOverlayPermission = hasOverlayPermission,
+                hasNotificationPermission = hasNotificationPermission,
+                isAnswerModeActive = isAnswerModeActive,
+                onStopClick = { stopAnswerMode() }
+            )
+        }
+        handleExternalIntent(intent)
+    }
 
-                // Stop confirmation dialog
-                if (showStopConfirmDialog) {
-                    PremiumDialog(
-                        onDismiss = { showStopConfirmDialog = false },
-                        title = stringResource(R.string.stop_confirm_title),
-                        message = stringResource(R.string.stop_confirm_message),
-                        confirmText = stringResource(R.string.button_stop_mode),
-                        onConfirm = { showStopConfirmDialog = false; stopAnswerMode() },
-                        dismissText = stringResource(R.string.button_cancel),
-                        onDismissAction = { showStopConfirmDialog = false }
-                    )
-                }
+    override fun onNewIntent(intent: Intent) {
+        super.onNewIntent(intent)
+        setIntent(intent)
+        handleExternalIntent(intent)
+    }
 
-                // Language dialog
-                if (showLanguageDialog) {
-                    LanguageSelectionDialog(
-                        onDismiss = { dialogQueue.dismissLanguageDialog() },
-                        onLanguageConfirmed = { dialogQueue.handleLanguageConfirmed() }
-                    )
-                }
+    override fun onPostResume() {
+        super.onPostResume()
+        window.decorView.post { requestQuickTileOnce() }
+    }
 
-                // Model setup dialog
-                if (showModelSetupDialog) {
-                    ModelSetupReminderDialog(
-                        onDismiss = { dialogQueue.dismissModelSetupDialog() },
-                        onGoToSettings = { dialogQueue.navigateToModelSettings() }
-                    )
-                }
+    private fun requestQuickTileOnce() {
+        if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) return
+        if (isRequestingCapturePermission) return
+        val preferences = getSharedPreferences("quick_settings_tile", Context.MODE_PRIVATE)
+        if (preferences.getBoolean("native_add_requested", false)) return
+
+        val statusBarManager = getSystemService(StatusBarManager::class.java) ?: return
+        preferences.edit().putBoolean("native_add_requested", true).apply()
+        runCatching {
+            statusBarManager.requestAddTileService(
+                ComponentName(this, ChatAssistantTileService::class.java),
+                getString(R.string.quick_tile_label),
+                Icon.createWithResource(this, R.drawable.ic_notification),
+                mainExecutor
+            ) { result ->
+                AppLog.d("MainActivity", "Quick Settings tile request result: $result")
             }
+        }.onFailure { error ->
+            preferences.edit().remove("native_add_requested").apply()
+            AppLog.w("MainActivity", "Unable to request Quick Settings tile", error)
+        }
+    }
+
+    private fun handleExternalIntent(source: Intent?) {
+        if (source?.getBooleanExtra(EXTRA_REQUEST_SCREEN_CAPTURE, false) == true) {
+            source.removeExtra(EXTRA_REQUEST_SCREEN_CAPTURE)
+            window.decorView.post { requestScreenCapturePermission() }
+            return
+        }
+        if (source?.getBooleanExtra(EXTRA_START_FROM_QUICK_TILE, false) == true) {
+            source.removeExtra(EXTRA_START_FROM_QUICK_TILE)
+            window.decorView.post { if (!FloatingWindowService.isRunning) checkAndRequestPermissions() }
         }
     }
 
     private fun checkAndRequestPermissions() {
-        if (!AppConfig.isApiConfigValid()) {
-            Toast.makeText(this, getString(R.string.toast_model_not_configured), Toast.LENGTH_LONG).show()
-            if (!dialogQueue.queue.contains(DialogQueue.DIALOG_MODEL_SETUP)) {
-                dialogQueue.queue.add(DialogQueue.DIALOG_MODEL_SETUP)
-                dialogQueue.processDialogQueue()
-            }
-            return
-        }
         // Android 13+ requires POST_NOTIFICATIONS as a runtime permission. Request it
         // before starting the foreground service, otherwise the persistent notification
         // is silently suppressed and the service may be killed after a timeout.
@@ -157,15 +170,42 @@ class MainActivity : BaseActivity() {
             ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) !=
             android.content.pm.PackageManager.PERMISSION_GRANTED
         ) {
+            startAfterNotificationPermission = true
             notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
             return
         }
         proceedWithStartFlow()
     }
 
+    private fun requestNotificationPermission() {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
+            startAfterNotificationPermission = false
+            notificationPermissionLauncher.launch(Manifest.permission.POST_NOTIFICATIONS)
+        }
+    }
+
     private fun proceedWithStartFlow() {
         if (!checkOverlayPermission()) { requestOverlayPermission(); return }
-        requestScreenCapturePermission()
+        continueAfterOverlayPermission()
+    }
+
+    private fun continueAfterOverlayPermission() {
+        val accessibilityEnabled = ScreenReaderService.isAccessibilityServiceEnabled(this)
+        if (accessibilityEnabled) {
+            startAnswerMode()
+            return
+        }
+        if (captureMode == AppConfig.CAPTURE_MODE_ACCESSIBILITY) {
+            if (!accessibilityEnabled) {
+                Toast.makeText(this, "请先开启屏幕读取权限", Toast.LENGTH_SHORT).show()
+                startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS))
+            } else {
+                startAnswerMode()
+            }
+            return
+        }
+        if (screenCaptureResultCode != null && screenCaptureData != null) startAnswerMode()
+        else requestScreenCapturePermission()
     }
 
     private fun checkOverlayPermission(): Boolean = Settings.canDrawOverlays(this)
@@ -177,14 +217,14 @@ class MainActivity : BaseActivity() {
 
     private fun requestScreenCapturePermission() {
         val screenCaptureManager = ScreenCaptureManager(this)
-        screenCaptureLauncher.launch(screenCaptureManager.createScreenCaptureIntent())
+        isRequestingCapturePermission = true
+        screenCaptureLauncher.launch(
+            screenCaptureManager.createScreenCaptureIntent(screenCaptureUserChoice)
+        )
     }
 
     private fun startAnswerMode() {
-        if (AppConfig.isAccessibilityCaptureMode() && !ScreenReaderService.isActive) {
-            Toast.makeText(this, getString(R.string.accessibility_service_not_enabled), Toast.LENGTH_LONG).show()
-            return
-        }
+        isRequestingCapturePermission = false
         // Re-read settings in case user changed them on HomePage
         selectedQuestionTypes = AppConfig.getQuestionTypes()
         cropMode = AppConfig.getCropMode()
@@ -197,6 +237,7 @@ class MainActivity : BaseActivity() {
             }
             putStringArrayListExtra("questionTypes", ArrayList(selectedQuestionTypes))
             putExtra("cropMode", cropMode)
+            putExtra("captureMode", captureMode)
         }
         try {
             if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.O) startForegroundService(intent)
@@ -220,7 +261,7 @@ class MainActivity : BaseActivity() {
                 }
                 startActivity(intent)
             } catch (e: Exception) {
-                AppLog.w("Cannot open battery optimization directly: ${e.message}")
+                AppLog.w("MainActivity", "Cannot open battery optimization directly", e)
             }
         }
     }
@@ -235,6 +276,7 @@ class MainActivity : BaseActivity() {
 
     override fun onResume() {
         super.onResume()
+        refreshPermissionState()
         if (isAnswerModeActive != FloatingWindowService.isRunning) {
             isAnswerModeActive = FloatingWindowService.isRunning
             if (!FloatingWindowService.isRunning) {
@@ -246,5 +288,13 @@ class MainActivity : BaseActivity() {
         if (FloatingWindowService.isRunning) {
             sendBroadcast(Intent(Constants.ACTION_REFRESH_SETTINGS).setPackage(packageName))
         }
+    }
+
+    private fun refreshPermissionState() {
+        hasOverlayPermission = checkOverlayPermission()
+        hasAccessibilityPermission = ScreenReaderService.isAccessibilityServiceEnabled(this)
+        hasNotificationPermission = Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU ||
+            ContextCompat.checkSelfPermission(this, Manifest.permission.POST_NOTIFICATIONS) ==
+            android.content.pm.PackageManager.PERMISSION_GRANTED
     }
 }

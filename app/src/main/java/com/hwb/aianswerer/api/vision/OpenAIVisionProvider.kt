@@ -380,15 +380,14 @@ class OpenAIVisionProvider(
     }
 
     companion object {
-        // VLM 图片分析为慢请求，超时保持较长（120s），避免误杀正常慢响应；
+        // VLM 图片分析为慢请求，超时保持较长（180s），避免误杀正常慢响应；
         // 排队问题由 vlmSemaphore 固定小并发解决，而非缩短超时
-        const val READ_TIMEOUT_SEC = 120L
-        const val CALL_TIMEOUT_SEC = 130L
-        const val WITH_TIMEOUT_MS = 120_000L
+        const val READ_TIMEOUT_SEC = 180L
+        const val CALL_TIMEOUT_SEC = 190L
+        const val WITH_TIMEOUT_MS = 180_000L
         const val CONNECT_TIMEOUT_SEC = 15L
         const val WRITE_TIMEOUT_SEC = 15L
-        // M-TOOL: 测试超时与生产单请求超时（READ_TIMEOUT_SEC=120s）对齐，
-        //     避免真实尺寸测试图在并发排队时被 30s 短超时误判为限流（假阳性）
+        // 测试请求保留 120s 上限，避免真实尺寸测试图被短超时误判，同时不让设置页等待过久。
         const val TEST_TIMEOUT_SEC = 120L
 
         @Volatile
@@ -550,7 +549,7 @@ class OpenAIVisionProvider(
                         Result.success(elapsed)
                     } else {
                         Result.failure(
-                            Exception("并发测试 $ok/$n 成功（并发 $n）——请降低最大并发数，否则录制/答题时可能排队超时")
+                            Exception("并发测试 $ok/$n 成功（并发 $n）——请降低最大并发数，否则批量处理时可能排队超时")
                         )
                     }
                 } catch (e: CancellationException) {

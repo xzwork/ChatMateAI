@@ -21,7 +21,6 @@ class SettingsActivity : BaseActivity() {
                 t = t,
                 onBack = { finish() },
                 onWebSearch = { startActivity(Intent(activity, com.hwb.aianswerer.providers.WebSearchSettingsActivity::class.java)) },
-                onModels = { startActivity(Intent(activity, com.hwb.aianswerer.providers.ProviderSettingsActivity::class.java)) },
                 onAbout = { startActivity(Intent(activity, AboutActivity::class.java)) },
                 onExportLogs = {
                     withContext(Dispatchers.IO) {
@@ -54,4 +53,5 @@ class SettingsActivity : BaseActivity() {
             )
         }
     }
+
 }

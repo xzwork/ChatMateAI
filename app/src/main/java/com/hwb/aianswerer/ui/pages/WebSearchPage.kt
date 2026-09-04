@@ -144,7 +144,7 @@ fun WebSearchPage(t: Th, onBack: () -> Unit) {
             Spacer(Modifier.height(4.dp))
 
             WSGlass(Modifier.padding(horizontal = 20.dp).padding(bottom = 12.dp), t) {
-                WSSwitch(t, "启用联网搜索", "识别题目后自动联网检索答案", searchEnabled) { searchEnabled = it; WebSearchStorage.saveSearchEnabled(it) }
+                WSSwitch(t, "启用联网搜索", "生成回复时自动联网补充信息", searchEnabled) { searchEnabled = it; WebSearchStorage.saveSearchEnabled(it) }
                 // B4: 当前模型不支持 function calling 时搜索静默失效，明确提示用户
                 val modelName = com.hwb.aianswerer.config.AppConfig.getModelName()
                 if (searchEnabled && modelName.isNotBlank() &&

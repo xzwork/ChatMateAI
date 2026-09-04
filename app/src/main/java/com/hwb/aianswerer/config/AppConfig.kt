@@ -24,6 +24,7 @@ object AppConfig {
     const val CROP_MODE_ONCE = ConfigStorage.CROP_MODE_ONCE
     const val CAPTURE_MODE_SCREENSHOT = ConfigStorage.CAPTURE_MODE_SCREENSHOT
     const val CAPTURE_MODE_ACCESSIBILITY = ConfigStorage.CAPTURE_MODE_ACCESSIBILITY
+    const val CAPTURE_MODE_HYBRID = ConfigStorage.CAPTURE_MODE_HYBRID
     const val QUICK_BUTTON_LAYOUT_ARC = ConfigStorage.QUICK_BUTTON_LAYOUT_ARC
     const val QUICK_BUTTON_LAYOUT_HORIZONTAL = ConfigStorage.QUICK_BUTTON_LAYOUT_HORIZONTAL
 
@@ -76,6 +77,8 @@ object AppConfig {
     fun saveCaptureMode(mode: String) = CaptureConfig.saveCaptureMode(mode)
     fun getCaptureMode(): String = CaptureConfig.getCaptureMode()
     fun isAccessibilityCaptureMode(): Boolean = CaptureConfig.isAccessibilityCaptureMode()
+    fun saveScreenCaptureUserChoice(enabled: Boolean) = CaptureConfig.saveScreenCaptureUserChoice(enabled)
+    fun getScreenCaptureUserChoice(): Boolean = CaptureConfig.getScreenCaptureUserChoice()
     fun saveQuestionTypes(types: Set<String>) = CaptureConfig.saveQuestionTypes(types)
     fun getQuestionTypes(): Set<String> = CaptureConfig.getQuestionTypes()
     fun saveAutoSubmit(enabled: Boolean) = CaptureConfig.saveAutoSubmit(enabled)

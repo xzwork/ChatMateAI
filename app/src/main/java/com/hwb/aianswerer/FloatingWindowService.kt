@@ -47,6 +47,15 @@ import com.hwb.aianswerer.ui.components.IcImage
 import com.hwb.aianswerer.ui.components.IcRecord
 import com.hwb.aianswerer.ui.components.IcVision
 import com.hwb.aianswerer.ui.theme.AIAnswererTheme
+import com.hwb.aianswerer.chat.ActiveChatSession
+import com.hwb.aianswerer.chat.ChatSession
+import com.hwb.aianswerer.chat.capture.ScreenCaptureEngine
+import com.hwb.aianswerer.chat.capture.ScreenshotPermissionRequiredException
+import com.hwb.aianswerer.chat.context.ConversationContextManager
+import com.hwb.aianswerer.chat.parser.GenericChatParser
+import com.hwb.aianswerer.chat.profile.AppProfileManager
+import com.hwb.aianswerer.chat.storage.ChatDatabase
+import com.hwb.aianswerer.chat.ui.ChatCompanionActivity
 import com.hwb.aianswerer.ui.theme.sandboxTheme
 import com.hwb.aianswerer.config.AppConfig
 import com.hwb.aianswerer.models.CropRect
@@ -57,6 +66,7 @@ import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.Job
 import kotlinx.coroutines.SupervisorJob
 import kotlinx.coroutines.cancel
+import kotlinx.coroutines.CancellationException
 import kotlinx.coroutines.delay
 
 import kotlinx.coroutines.launch
@@ -151,6 +161,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
     private lateinit var captureHandler: CaptureHandler
     private lateinit var answerFetcher: AnswerFetcher
     private lateinit var viewModel: FloatingWindowViewModel
+    private var chatCaptureJob: Job? = null
 
     // ── Arc / toggle state ──────────────────────────────────────────────
 
@@ -214,9 +225,10 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                 Constants.ACTION_REQUEST_ANSWER -> {
                     val questionText = intent.getStringExtra(Constants.EXTRA_QUESTION_TEXT)
                     if (!questionText.isNullOrBlank()) {
-                        viewModel.onTextRecognized(questionText, null, answerFetcher)
+                        viewModel.requestAnswer(questionText, null, answerFetcher)
                     }
                 }
+                Constants.ACTION_RECOGNIZE_WITH_SCREENSHOT -> handleChatCompanionCapture(forceScreenshot = true)
                 ACTION_CROP_RESULT -> {
                     val imagePath = intent.getStringExtra(EXTRA_IMAGE_PATH)
                     val tlX = intent.getFloatExtra(ImageCropActivity.EXTRA_TOP_LEFT_X, 0f)
@@ -265,6 +277,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
     override fun onCreate() {
         super.onCreate()
         isRunning = true
+        ChatAssistantTileService.refresh(this)
         savedStateRegistryController.performRestore(null)
         lifecycleRegistry.currentState = Lifecycle.State.CREATED
 
@@ -295,6 +308,13 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
             override fun onRecordingBitmap(bitmap: Bitmap) { recorder.processBitmap(bitmap) }
             override fun onImageText(text: String) { imageCollector.processText(text) }
             override fun onImageBitmap(bitmap: Bitmap) { imageCollector.processBitmap(bitmap) }
+            override fun showRecognitionResults(text: String, fromScreenText: Boolean) {
+                startActivity(Intent(this@FloatingWindowService, ConfirmTextActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra(Constants.EXTRA_RECOGNIZED_TEXT, text)
+                    putExtra(Constants.EXTRA_FROM_SCREEN_TEXT, fromScreenText)
+                })
+            }
         })
 
         recorder = RecordingCoordinator(pipeline, serviceScope, viewModel.recordingCallbacks)
@@ -309,20 +329,6 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
         )
 
         registerReceiver()
-
-        // Foreground notification
-        NotificationHelper.createChannel(this)
-        NotificationHelper.ensurePermission(this)
-        val notification = NotificationHelper.buildNotification(this)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
-            startForeground(
-                Constants.NOTIFICATION_ID, notification,
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION or
-                ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
-            )
-        } else {
-            startForeground(Constants.NOTIFICATION_ID, notification)
-        }
 
         showFloatingWindow()
 
@@ -343,6 +349,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
     private fun registerReceiver() {
         val filter = IntentFilter(Constants.ACTION_SHOW_ANSWER)
         filter.addAction(Constants.ACTION_REQUEST_ANSWER)
+        filter.addAction(Constants.ACTION_RECOGNIZE_WITH_SCREENSHOT)
         filter.addAction(ACTION_CROP_RESULT)
         filter.addAction(Constants.ACTION_REFRESH_SETTINGS)
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
@@ -359,6 +366,8 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
             stopSelf()
             return START_NOT_STICKY
         }
+        val hasProjectionPermission = intent?.hasExtra("resultCode") == true && intent.hasExtra("data")
+        startForegroundForCaptureMode(hasProjectionPermission)
         intent?.let {
             if (it.hasExtra("resultCode") && it.hasExtra("data")) {
                 val resultCode = it.getIntExtra("resultCode", Activity.RESULT_CANCELED)
@@ -379,6 +388,19 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
             viewModel.savedCropRectEach = null
         }
         return START_NOT_STICKY
+    }
+
+    private fun startForegroundForCaptureMode(hasProjectionPermission: Boolean) {
+        NotificationHelper.createChannel(this)
+        NotificationHelper.ensurePermission(this)
+        val notification = NotificationHelper.buildNotification(this)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            var type = ServiceInfo.FOREGROUND_SERVICE_TYPE_SPECIAL_USE
+            if (hasProjectionPermission) type = type or ServiceInfo.FOREGROUND_SERVICE_TYPE_MEDIA_PROJECTION
+            startForeground(Constants.NOTIFICATION_ID, notification, type)
+        } else {
+            startForeground(Constants.NOTIFICATION_ID, notification)
+        }
     }
 
     // ── CaptureHandlerCallbacks implementation ──────────────────────────
@@ -427,7 +449,10 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                         isImageCollecting = viewModel.isImageCollecting.value,
                         isLeftSide = viewModel.floatOffsetX.value < screenW / 2f,
                         isDragging = false,
-                        onCaptureClick = { captureHandler.handleCapture() },
+                        onCaptureClick = {
+                            if (viewModel.isRecording.value || viewModel.isImageCollecting.value) captureHandler.handleCapture()
+                            else handleChatCompanionCapture()
+                        },
                         onLongPress = {
                             AppLog.d("FWS", "onLongPress triggered, isArcExpanded=$isArcExpanded")
                             isArcExpanded = !isArcExpanded
@@ -528,6 +553,59 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
         }
         windowAView = aComposeView
         updateWindowAPosition()
+    }
+
+    /** Performs exactly one user-triggered chat snapshot, then opens the action panel. */
+    private fun handleChatCompanionCapture(forceScreenshot: Boolean = false) {
+        if (chatCaptureJob?.isActive == true) return
+        chatCaptureJob = serviceScope.launch {
+            val wasStealth = settings.stealthMode.value
+            try {
+                viewModel.floatingStatus.value = FloatingStatus.Recognizing
+                viewModel.statusMessage.value = "正在识别聊天…"
+                windowMgr.setAllAlpha(0f)
+                windowMgr.setAllFlagSecure(false)
+                // A retry is requested while our result Activity is closing; wait for the
+                // underlying chat app to become visible before taking the screenshot.
+                delay(if (forceScreenshot) 450 else 180)
+                val snapshot = ScreenCaptureEngine(this@FloatingWindowService, screenCaptureManager).capture(forceScreenshot)
+                val profile = AppProfileManager.forPackage(snapshot.packageName, snapshot.appName)
+                val parsed = GenericChatParser().parse(
+                    snapshot.packageName, snapshot.appName, snapshot.nodes,
+                    snapshot.screenWidth, snapshot.screenHeight, profile
+                )
+                if (parsed.messages.isEmpty()) error("无法提取当前屏幕的聊天消息")
+                val (conversationId, history) = ConversationContextManager(
+                    ChatDatabase.get(this@FloatingWindowService).chatDao()
+                ).merge(parsed)
+                ChatSession.active = ActiveChatSession(conversationId, parsed, history, snapshot.usedOcrFallback)
+                viewModel.statusMessage.value = null
+                viewModel.floatingStatus.value = FloatingStatus.Idle
+                startActivity(Intent(this@FloatingWindowService, ChatCompanionActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                })
+            } catch (e: CancellationException) {
+                throw e
+            } catch (e: ScreenshotPermissionRequiredException) {
+                AppLog.w("CHAT", "Accessibility screenshot unavailable; requesting MediaProjection", e)
+                viewModel.floatingStatus.value = FloatingStatus.Error
+                viewModel.statusMessage.value = e.message
+                startActivity(Intent(this@FloatingWindowService, MainActivity::class.java).apply {
+                    flags = Intent.FLAG_ACTIVITY_NEW_TASK or Intent.FLAG_ACTIVITY_CLEAR_TOP or Intent.FLAG_ACTIVITY_SINGLE_TOP
+                    putExtra(MainActivity.EXTRA_REQUEST_SCREEN_CAPTURE, true)
+                })
+            } catch (e: Exception) {
+                AppLog.e("CHAT", "chat capture failed", e)
+                viewModel.floatingStatus.value = FloatingStatus.Error
+                viewModel.statusMessage.value = e.message ?: "无法识别当前聊天内容"
+                delay(4000)
+                viewModel.statusMessage.value = null
+                viewModel.floatingStatus.value = FloatingStatus.Idle
+            } finally {
+                windowMgr.setAllAlpha(if (wasStealth) Constants.STEALTH_ALPHA else Constants.VISIBLE_ALPHA)
+                if (wasStealth) windowMgr.setAllFlagSecure(true)
+            }
+        }
     }
 
     /**
@@ -1458,6 +1536,7 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
     override fun onDestroy() {
         destroyed = true
         isRunning = false
+        ChatAssistantTileService.refresh(this)
         // M2: 清理链整体包裹——任何一步异常都不允许中断后续清理
         try {
             recorder.cancel()

@@ -28,6 +28,5 @@ dependencyResolutionManagement {
     }
 }
 
-rootProject.name = "FloatyAnswer"
+rootProject.name = "ChatMateAI"
 include(":app")
- 

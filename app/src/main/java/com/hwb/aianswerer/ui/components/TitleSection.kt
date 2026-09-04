@@ -22,16 +22,14 @@ import com.hwb.aianswerer.ui.theme.*
 
 @Composable
 fun TitleSection(t: Th, onSettingsClick: () -> Unit) {
-    val titleBrush = if (t.isLight) Brush.linearGradient(listOf(t.p, t.pe), Offset.Zero, Offset.Infinite)
-        else Brush.linearGradient(listOf(Dc.TitleBg1, Dc.TitleBg2, Dc.TitleBg3, Dc.TitleBg4, Dc.TitleBg5), start = Offset(0f, 0f), end = Offset(Float.POSITIVE_INFINITY, Float.POSITIVE_INFINITY))
     Row(
         Modifier.fillMaxWidth().padding(top = 52.dp, bottom = 12.dp, start = 28.dp, end = 28.dp),
         verticalAlignment = Alignment.CenterVertically
     ) {
         Row(Modifier.weight(1f)) {
-            Text("AI", style = DW.DisplayLarge.copy(brush = titleBrush, fontSize = 56.sp, lineHeight = 62.sp), modifier = Modifier.alignByBaseline())
+            Text("Chat", style = DW.DisplayLarge.copy(color = t.p, fontSize = 48.sp, lineHeight = 56.sp), modifier = Modifier.alignByBaseline())
             Spacer(Modifier.width(10.dp))
-            Text("Answer", style = DW.HeadlineMedium.copy(brush = titleBrush, fontSize = 34.sp, lineHeight = 40.sp), modifier = Modifier.alignByBaseline())
+            Text("Mate", style = DW.HeadlineMedium.copy(color = t.ob, fontSize = 30.sp, lineHeight = 38.sp), modifier = Modifier.alignByBaseline())
         }
         Box(
             Modifier.size(56.dp).bouncyClick(onSettingsClick),

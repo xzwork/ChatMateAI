@@ -1,7 +1,8 @@
 <?xml version="1.0" encoding="utf-8"?>
 <resources>
-    <!-- Android 12+ 启动屏：纯白底，无图标（最小化系统启动屏） -->
+    <!-- Android 12+ branded launch screen. -->
     <style name="Theme.AIAnswerer.Splash" parent="Theme.AIAnswerer">
-        <item name="android:windowSplashScreenBackground">#FFFFFF</item>
+        <item name="android:windowSplashScreenBackground">#F5F9FF</item>
+        <item name="android:windowSplashScreenAnimatedIcon">@mipmap/ic_launcher</item>
     </style>
 </resources>

@@ -9,7 +9,9 @@ import android.hardware.display.VirtualDisplay
 import android.media.Image
 import android.media.ImageReader
 import android.media.projection.MediaProjection
+import android.media.projection.MediaProjectionConfig
 import android.media.projection.MediaProjectionManager
+import android.os.Build
 import android.os.Handler
 import android.os.Looper
 import android.util.DisplayMetrics
@@ -49,8 +51,17 @@ class ScreenCaptureManager(private val context: Context) {
     /**
      * 创建截图Intent，用于请求权限
      */
-    fun createScreenCaptureIntent(): Intent {
-        return projectionManager.createScreenCaptureIntent()
+    fun createScreenCaptureIntent(allowUserChoice: Boolean = false): Intent {
+        return if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.UPSIDE_DOWN_CAKE) {
+            val config = if (allowUserChoice) {
+                MediaProjectionConfig.createConfigForUserChoice()
+            } else {
+                MediaProjectionConfig.createConfigForDefaultDisplay()
+            }
+            projectionManager.createScreenCaptureIntent(config)
+        } else {
+            projectionManager.createScreenCaptureIntent()
+        }
     }
 
     /** Whether MediaProjection is initialized and ready to capture */
@@ -333,4 +344,3 @@ class ScreenCaptureManager(private val context: Context) {
         savedData = null
     }
 }
-

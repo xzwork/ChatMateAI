@@ -14,7 +14,6 @@ import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.text.TextStyle
-import androidx.compose.ui.text.font.FontFamily
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.unit.Dp
 import androidx.compose.ui.unit.dp
@@ -55,16 +54,16 @@ object Dc {
 
 // ── Typography ──
 object DW {
-    val DisplayLarge = TextStyle(fontSize = 36.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Bold, lineHeight = 46.sp)
-    val HeadlineMedium = TextStyle(fontSize = 28.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.SemiBold, lineHeight = 38.sp)
-    val TitleLarge = TextStyle(fontSize = 22.sp, fontFamily = FontFamily.Serif, fontWeight = FontWeight.Medium, lineHeight = 30.sp)
-    val TitleMedium = TextStyle(fontSize = 18.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, lineHeight = 26.sp)
-    val BodyLarge = TextStyle(fontSize = 17.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, lineHeight = 28.sp)
-    val BodyMedium = TextStyle(fontSize = 15.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, lineHeight = 22.sp)
-    val BodySmall = TextStyle(fontSize = 13.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Normal, lineHeight = 19.sp)
-    val LabelLarge = TextStyle(fontSize = 15.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, lineHeight = 22.sp)
-    val LabelMedium = TextStyle(fontSize = 13.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, lineHeight = 17.sp)
-    val LabelSmall = TextStyle(fontSize = 12.sp, fontFamily = FontFamily.SansSerif, fontWeight = FontWeight.Medium, lineHeight = 15.sp, letterSpacing = 0.5.sp)
+    val DisplayLarge = TextStyle(fontSize = 36.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Bold, lineHeight = 46.sp)
+    val HeadlineMedium = TextStyle(fontSize = 28.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.SemiBold, lineHeight = 38.sp)
+    val TitleLarge = TextStyle(fontSize = 22.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Medium, lineHeight = 30.sp)
+    val TitleMedium = TextStyle(fontSize = 18.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Medium, lineHeight = 26.sp)
+    val BodyLarge = TextStyle(fontSize = 17.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Normal, lineHeight = 28.sp)
+    val BodyMedium = TextStyle(fontSize = 15.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Normal, lineHeight = 22.sp)
+    val BodySmall = TextStyle(fontSize = 13.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Normal, lineHeight = 19.sp)
+    val LabelLarge = TextStyle(fontSize = 15.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Medium, lineHeight = 22.sp)
+    val LabelMedium = TextStyle(fontSize = 13.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Medium, lineHeight = 17.sp)
+    val LabelSmall = TextStyle(fontSize = 12.sp, fontFamily = AppFontFamily, fontWeight = FontWeight.Medium, lineHeight = 15.sp, letterSpacing = 0.5.sp)
 }
 
 // ── Theme Data ──
@@ -80,23 +79,23 @@ data class Th(
 )
 
 val LH by lazy {
-    Th(Lc.Bg1, Lc.Bg2, Lc.Bg3, Lc.Bg2, Lc.Bg1,
-        Lc.Primary, Lc.PrimaryEnd, Lc.PrimaryDim, Lc.PrimaryContainer, Lc.OnPrimaryContainer,
-        Lc.Success, Lc.OnBg, Lc.OnBgVariant,
-        Lc.GlassTop, Lc.GlassBot, Lc.GlassBorder,
-        Lc.HdrTop, Lc.HdrBot,
-        Lc.Accent, Lc.Accent, Lc.Accent,
-        Lc.TrackOff, Lc.Error, Color.White, true)
+    Th(Color(0xFFF5F9FF), Color(0xFFF5F9FF), Color(0xFFF5F9FF), Color(0xFFF5F9FF), Color(0xFFF5F9FF),
+        Color(0xFF2563EB), Color(0xFF2563EB), Color(0xFF1D4ED8), Color(0xFFDBEAFE), Color(0xFF1E3A8A),
+        Color(0xFF2563EB), Color(0xFF0F172A), Color(0xFF64748B),
+        Color.White, Color(0xFFDCE8F8), Color.White,
+        Color.White, Color.White,
+        Color(0xFF2563EB), Color(0xFF2563EB), Color(0xFF60A5FA),
+        Color(0xFFE2E8F0), Color(0xFFDC2626), Color.White, true)
 }
 
 val DH by lazy {
-    Th(Dc.Bg1, Dc.Bg2, Dc.Bg3, Dc.Bg4, Dc.Bg5,
-        Dc.UiAccent, Dc.UiAccentLight, Dc.PrimaryDim, Dc.PrimaryContainer, Dc.OnPrimaryContainer,
-        Dc.Success, Dc.OnBg, Dc.OnBgVariant,
-        Dc.GlassTop, Dc.GlassBot, Dc.GlassBorder,
-        Dc.HdrTop, Dc.HdrBot,
-        Dc.Accent, Dc.UiAccent, Dc.UiAccentLight,
-        Dc.TrackOff, Dc.Error, Color.White, false)
+    Th(Color(0xFF0F172A), Color(0xFF0F172A), Color(0xFF0F172A), Color(0xFF0F172A), Color(0xFF0F172A),
+        Color(0xFF60A5FA), Color(0xFF60A5FA), Color(0xFF3B82F6), Color(0xFF1E3A5F), Color(0xFFDBEAFE),
+        Color(0xFF60A5FA), Color(0xFFF8FAFC), Color(0xFF94A3B8),
+        Color(0xFF172033), Color(0xFF26344D), Color(0xFF172033),
+        Color(0xFF172033), Color(0xFF172033),
+        Color(0xFF60A5FA), Color(0xFF60A5FA), Color(0xFF93C5FD),
+        Color(0xFF334155), Color(0xFFF87171), Color.White, false)
 }
 
 // ── Constants ──
@@ -105,13 +104,18 @@ val BtnR = 32.dp; val CardR = 24.dp; val ChipR = 20.dp; val CardPad = 24.dp
 // ── Theme Accessor ──
 @Composable
 fun sandboxTheme(): Th {
-    return ThemeManager.getCurrentTheme()
+    val dark = when (ThemeState.darkMode) {
+        1 -> false
+        2 -> true
+        else -> isSystemInDarkTheme()
+    }
+    return if (dark) DH else LH
 }
 
 // ── Preview Helper ──
 @Composable
 fun Themed(t: Th = LH, content: @Composable (Th) -> Unit) {
-    androidx.compose.material3.MaterialTheme { content(t) }
+    androidx.compose.material3.MaterialTheme(typography = AppTypography) { content(t) }
 }
 
 // ── Glass Surface ──

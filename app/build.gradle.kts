@@ -8,6 +8,7 @@ plugins {
     alias(libs.plugins.kotlin.android)
     alias(libs.plugins.kotlin.compose)
     alias(libs.plugins.kover)
+    id("org.jetbrains.kotlin.kapt")
 }
 
 // 读取local.properties
@@ -17,9 +18,21 @@ if (localPropertiesFile.exists()) {
     FileInputStream(localPropertiesFile).use(localProperties::load)
 }
 
-// Helper to read properties while providing a default fallback
-fun getProperty(key: String, defaultValue: String = ""): String =
-    localProperties.getProperty(key) ?: defaultValue
+// The build script can supply release credentials through temporary environment
+// variables so they never need to be written into the repository. local.properties
+// remains the fallback for Android Studio builds.
+fun getProperty(key: String, defaultValue: String = ""): String {
+    val environmentKey = when (key) {
+        "signing.storeFile" -> "CHATMATE_SIGNING_STORE_FILE"
+        "signing.storePassword" -> "CHATMATE_SIGNING_STORE_PASSWORD"
+        "signing.keyAlias" -> "CHATMATE_SIGNING_KEY_ALIAS"
+        "signing.keyPassword" -> "CHATMATE_SIGNING_KEY_PASSWORD"
+        else -> null
+    }
+    return environmentKey?.let(System::getenv)
+        ?: localProperties.getProperty(key)
+        ?: defaultValue
+}
 
 android {
     namespace = "com.hwb.aianswerer"
@@ -76,14 +89,13 @@ android {
                 this.storePassword = storePassword
                 this.keyAlias = keyAlias
                 this.keyPassword = keyPassword
-                println("Release signing configuration loaded from local.properties")
+                println("Release signing configuration loaded")
             }
         }
     }
 
     // APK命名规则
     applicationVariants.all {
-        val buildTypeName = buildType.name
         val versionNameValue = versionName
         outputs.all {
             // 使用安全的方式重命名APK，避免依赖AGP内部API
@@ -91,7 +103,7 @@ android {
                 val outputImpl = this as com.android.build.gradle.internal.api.BaseVariantOutputImpl
                 val date = SimpleDateFormat("yyyyMMdd-HHmm").format(Date())
                 outputImpl.outputFileName =
-                    "${date}_FloatyAnswer_v${versionNameValue}.apk"
+                    "${date}_ChatMateAI_v${versionNameValue}.apk"
             } catch (e: Exception) {
                 println("Warning: Could not rename APK output: ${e.message}")
             }
@@ -101,8 +113,6 @@ android {
     buildTypes {
         debug {
             isDebuggable = true
-            applicationIdSuffix = ".debug"
-            versionNameSuffix = "-debug"
         }
         release {
             isMinifyEnabled = true  // 启用R8代码混淆和优化
@@ -113,8 +123,10 @@ android {
             )
             // Release签名：签名配置不完整时自动降级到debug签名
             val releaseSigningConfig = signingConfigs.getByName("release")
-            if (releaseSigningConfig.storeFile != null) {
-                signingConfig = releaseSigningConfig
+            signingConfig = if (releaseSigningConfig.storeFile != null) {
+                releaseSigningConfig
+            } else {
+                signingConfigs.getByName("debug")
             }
         }
     }
@@ -181,6 +193,15 @@ dependencies {
 
     // Security - EncryptedSharedPreferences for API Key storage
     implementation(libs.security.crypto)
+
+    // Chat companion persistence
+    implementation(libs.room.runtime)
+    implementation(libs.room.ktx)
+    kapt(libs.room.compiler)
+}
+
+kapt {
+    correctErrorTypes = true
 }
 
 // Kover code coverage configuration

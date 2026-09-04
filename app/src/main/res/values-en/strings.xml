@@ -1,48 +1,49 @@
 <resources>
+    <string name="quick_tile_label">Chat assistant</string>
     <!-- App name -->
-    <string name="app_name">FloatyAnswer</string>
+    <string name="app_name">ChatMate AI</string>
 
     <!-- Main screen -->
-    <string name="main_title">FloatyAnswer</string>
-    <string name="main_subtitle">Capture · Recognize · Answer, in one flow</string>
+    <string name="main_title">ChatMate AI</string>
+    <string name="main_subtitle">Understand conversations and reply with confidence</string>
     <string name="status_label">Current Status</string>
-    <string name="status_running">Answer Mode Running</string>
-    <string name="status_running_desc">Floating window is visible</string>
-    <string name="status_stopped">Answer Mode Stopped</string>
-    <string name="status_stopped_desc">Click the button below to start</string>
-    <string name="button_start_mode">✦  Start Answer Mode</string>
+    <string name="status_running">Chat assistant is running</string>
+    <string name="status_running_desc">The floating button is visible</string>
+    <string name="status_stopped">Chat assistant is off</string>
+    <string name="status_stopped_desc">Use the switch on Home to start</string>
+    <string name="button_start_mode">Start Chat Assistant</string>
     <string name="button_start_mode_disabled">Configure AI Model First</string>
-    <string name="button_stop_mode">Stop Answer Mode</string>
-    <string name="stop_confirm_title">Stop Answering</string>
-    <string name="stop_confirm_message">Exit answer mode? The floating window and screen capture service will stop.</string>
+    <string name="button_stop_mode">Stop Chat Assistant</string>
+    <string name="stop_confirm_title">Stop Chat Assistant</string>
+    <string name="stop_confirm_message">Stop the chat assistant? The floating window and recognition service will stop.</string>
 
     <!-- Usage guide -->
-    <string name="usage_guide_title">Usage Guide &amp; FAQ</string>
-    <string name="usage_step_0">0. Configure AI Model</string>
-    <string name="usage_step_1">1. Click the button below to start answer mode</string>
+    <string name="usage_guide_title">Usage Guide</string>
+    <string name="usage_step_0">0. Configure the AI model and system prompt</string>
+    <string name="usage_step_1">1. Turn on the chat assistant from Home</string>
     <string name="usage_step_2">2. App will run in background with floating button</string>
     <string name="usage_step_3">3. Click floating button to capture screen</string>
-    <string name="usage_step_4">4. Confirm the recognized question text</string>
-    <string name="usage_step_5">5. AI will analyze and provide answer</string>
+    <string name="usage_step_4">4. Confirm the recognized chat content</string>
+    <string name="usage_step_5">5. AI generates a personalized reply suggestion</string>
     <string name="usage_step_6_text">6. If recognition fails, consider</string>
     <string name="usage_step_6_url" translatable="false">https://jingyan.baidu.com/article/7f41ecec6bf8de183c095c29.html</string>
     <string name="usage_step_7_text">7. If you see "System has denied access permission to this app" when granting overlay permission</string>
     <string name="usage_step_7_link">Please manually enable "Display over other apps"</string>
     <string name="usage_step_7_url" translatable="false">https://bbs.oneplus.com/thread/5077724</string>
-    <string name="usage_step_8">8. For better recognition, crop to a single question. Multiple-question images are not supported yet</string>
+    <string name="usage_step_8">8. If screen reading is inaccurate, switch to screenshot recognition</string>
 
     <!-- Settings -->
     <string name="settings_title">Settings</string>
-    <string name="setting_auto_submit">Auto Submit Answer</string>
-    <string name="setting_auto_submit_desc">Get answer directly without confirmation dialog</string>
+    <string name="setting_auto_submit">Generate Replies Automatically</string>
+    <string name="setting_auto_submit_desc">Generate a reply immediately after recognition</string>
     <string name="setting_auto_copy">Auto Copy to Clipboard</string>
-    <string name="setting_auto_copy_desc">Automatically copy answer to clipboard after generation</string>
-    <string name="setting_display_control_title">Answer Card Display Content</string>
-    <string name="setting_display_control_desc">Customize answer card display content</string>
-    <string name="setting_show_question">Show Question</string>
-    <string name="setting_show_question_desc">Display question content in answer card</string>
-    <string name="setting_show_options">Show Options</string>
-    <string name="setting_show_options_desc">Display options in answer card</string>
+    <string name="setting_auto_copy_desc">Automatically copy the generated reply to the clipboard</string>
+    <string name="setting_display_control_title">Reply Card Display</string>
+    <string name="setting_display_control_desc">Customize the content shown in reply cards</string>
+    <string name="setting_show_question">Show Chat Content</string>
+    <string name="setting_show_question_desc">Display recognized chat content in the reply card</string>
+    <string name="setting_show_options">Show Extra Context</string>
+    <string name="setting_show_options_desc">Display extra context in the reply card</string>
 
     <!-- Floating Window Appearance -->
     <string name="setting_float_window_title">Floating Window</string>
@@ -59,7 +60,7 @@
     <string name="float_toggle_search_no_provider">Please enable at least one search provider in settings</string>
 
     <!-- Floating window card and buttons -->
-    <string name="float_answer_title">Answer</string>
+    <string name="float_answer_title">Suggested Reply</string>
     <string name="float_quick_vlm">VLM</string>
     <string name="float_quick_search">Search</string>
     <string name="float_quick_reasoning">Reason</string>
@@ -71,7 +72,7 @@
     <string name="image_recording_conflict">Please stop recording mode first</string>
     <string name="float_prev_page">Prev</string>
     <string name="float_next_page">Next</string>
-    <string name="float_question_index">Q%1$d</string>
+    <string name="float_question_index">Item %1$d</string>
 
     <!-- Theme Mode -->
     <string name="setting_theme_title">Appearance</string>
@@ -80,8 +81,8 @@
     <string name="setting_theme_dark">Dark Mode</string>
 
     <!-- Session Settings -->
-    <string name="session_settings_title">Session Settings</string>
-    <string name="session_settings_desc">Configure question types and scope to improve accuracy</string>
+    <string name="session_settings_title">Recognition Settings</string>
+    <string name="session_settings_desc">Adjust the recognition area to improve chat recognition</string>
     <string name="question_type_label">Question Types (Multiple)</string>
     <string name="question_type_single">Single Choice</string>
     <string name="question_type_multiple">Multiple Choice</string>
@@ -125,7 +126,7 @@
     <!-- About screen -->
     <string name="about_title">About</string>
     <string name="about_app_intro_title">App Introduction</string>
-    <string name="about_app_intro">An AI-powered Android answering assistant that uses screenshots and OCR to recognize questions and provides answers through AI.</string>
+    <string name="about_app_intro">An Android AI chat companion that reads or captures conversations and generates personalized reply suggestions.</string>
     <string name="about_version_title">Version Information</string>
     <string name="about_version">Version %1$s (%2$d)</string>
     <string name="about_libraries_title">Core Libraries</string>
@@ -151,7 +152,7 @@
     <string name="about_contact_email_intent_title">Contact via Email</string>
     <string name="about_contact_email_copied">Email copied to clipboard: %s</string>
     <string name="about_restart_dialog_title">Restart App</string>
-    <string name="about_restart_dialog_message">App needs to restart to switch language. Note: restart will interrupt the current answer mode. Confirm restart?</string>
+    <string name="about_restart_dialog_message">The app must restart to switch languages. Restarting will stop the current chat assistant session. Continue?</string>
     <string name="button_confirm">Confirm</string>
     <string name="button_cancel">Cancel</string>
 
@@ -161,11 +162,11 @@
 
     <!-- Toast messages -->
     <string name="toast_model_not_configured">Please configure AI model first</string>
-    <string name="toast_permission_overlay_required">Overlay permission required for answer mode</string>
-    <string name="toast_permission_capture_required">Screen capture permission required for answer mode</string>
-    <string name="toast_mode_started">Answer mode started</string>
-    <string name="toast_mode_stopped">Answer mode stopped</string>
-    <string name="toast_mode_start_failed">Failed to start answer mode: %s</string>
+    <string name="toast_permission_overlay_required">Overlay permission is required for the chat assistant</string>
+    <string name="toast_permission_capture_required">Screen capture permission is required for screenshot fallback</string>
+    <string name="toast_mode_started">Chat assistant started</string>
+    <string name="toast_mode_stopped">Chat assistant stopped</string>
+    <string name="toast_mode_start_failed">Failed to start chat assistant: %s</string>
 
     <!-- Content descriptions (Accessibility) -->
     <string name="cd_back_button">Back button</string>
@@ -189,19 +190,19 @@
     <string name="confirm_text_title">Confirm Recognized Text</string>
     <string name="confirm_text_label">Recognized Text (Editable)</string>
     <string name="confirm_text_placeholder">Edit or confirm the recognized text</string>
-    <string name="button_confirm_and_answer">Confirm and Get Answer</string>
+    <string name="button_confirm_and_answer">Confirm and Generate Reply</string>
     <string name="toast_text_empty">Text is empty</string>
-    <string name="toast_getting_answer">Getting answer...</string>
+    <string name="toast_getting_answer">Generating reply...</string>
 
     <!-- Floating Window -->
-    <string name="floating_answer_title">AI Response</string>
-    <string name="notification_content">Answer mode is running</string>
-    <string name="stop_service">Stop Answering</string>
+    <string name="floating_answer_title">Suggested Reply</string>
+    <string name="notification_content">Chat assistant is running</string>
+    <string name="stop_service">Stop Assistant</string>
 
     <!-- API Error Messages -->
     <string name="error_empty_response">Empty response body</string>
-    <string name="error_no_answer_content">No answer content received</string>
-    <string name="error_parse_question_failed">Failed to parse question</string>
+    <string name="error_no_answer_content">No reply content received</string>
+    <string name="error_parse_question_failed">Could not parse the chat content</string>
     <string name="error_connection_test_failed">Connection test failed: %s</string>
     <string name="error_unknown">Unknown error</string>
     <string name="error_api_config_invalid">API configuration is invalid. Please configure the API in settings.</string>
@@ -232,9 +233,9 @@
     <string name="default_question_type">Single Choice</string>
 
     <!-- Answer Display Panel -->
-    <string name="answer_section_question_title">Question</string>
-    <string name="answer_section_options_title">Options</string>
-    <string name="answer_section_answer_title">Answer</string>
+    <string name="answer_section_question_title">Chat Content</string>
+    <string name="answer_section_options_title">Extra Context</string>
+    <string name="answer_section_answer_title">Suggested Reply</string>
 
     <!-- Dialog related strings -->
     <string name="dialog_language_title">选择语言 / Select Language</string>
@@ -243,7 +244,7 @@
     <string name="dialog_language_cancel">Cancel</string>
 
     <string name="dialog_model_setup_title">AI Model Settings</string>
-    <string name="dialog_model_setup_message">To use the AI answering feature, you need to configure API parameters first. Go to settings now?</string>
+    <string name="dialog_model_setup_message">Configure the API before generating reply suggestions. Open settings now?</string>
     <string name="dialog_model_setup_confirm">Go to Settings</string>
     <string name="dialog_model_setup_cancel">Cancel</string>
 
@@ -340,9 +341,9 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
     <string name="status_select_region">✂️ Select recognition area…</string>
     <string name="status_recognizing">🔍 OCR recognizing…</string>
     <string name="status_recognized">✅ Recognition complete</string>
-    <string name="status_getting_answer">🤖 AI analyzing…</string>
-    <string name="status_answer_copied">✅ Answer copied</string>
-    <string name="status_answer_generated">✅ Answer generated</string>
+    <string name="status_getting_answer">🤖 AI is generating…</string>
+    <string name="status_answer_copied">✅ Reply copied</string>
+    <string name="status_answer_generated">✅ Reply generated</string>
     <string name="status_error_prefix">❌ %s</string>
     <string name="status_success_prefix">✅ %s</string>
     <string name="status_operation_failed">Operation failed: %s</string>
@@ -351,9 +352,9 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
     <string name="status_recognition_failed">Text recognition failed: %s</string>
     <string name="status_recognition_error">Recognition error: %s</string>
     <string name="status_ai_analysis_failed">AI analysis failed: %s</string>
-    <string name="status_fetch_answer_failed">Failed to get answer: %s</string>
-    <string name="notification_channel_name">FloatyAnswer Service</string>
-    <string name="clipboard_label">AI Answer</string>
+    <string name="status_fetch_answer_failed">Failed to generate reply: %s</string>
+    <string name="notification_channel_name">ChatMate AI Service</string>
+    <string name="clipboard_label">AI Reply</string>
 
     <!-- Vision Model -->
     <string name="vision_settings_title">Vision Model Settings</string>
@@ -371,9 +372,9 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
     <string name="hint_vision_model">e.g. deepseek-chat or gpt-4o-mini</string>
     <string name="vision_reset_defaults">Reset to Defaults</string>
     <string name="status_vision_analyzing">👁️ Vision analyzing…</string>
-    <string name="status_vision_detected_single">✅ Detected 1 question</string>
-    <string name="status_vision_detected_multi">📋 Detected %d questions</string>
-    <string name="status_vision_no_question">⚠️ No questions detected</string>
+    <string name="status_vision_detected_single">✅ Chat content recognized</string>
+    <string name="status_vision_detected_multi">📋 Recognized %d items</string>
+    <string name="status_vision_no_question">⚠️ No chat content recognized</string>
     <string name="status_vision_fallback">⚠️ Vision failed, please retry</string>
 
     <!-- Capture Mode -->
@@ -381,9 +382,12 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
     <string name="setting_capture_mode_desc">Choose how to get screen content</string>
     <string name="capture_mode_screenshot">Screenshot</string>
     <string name="capture_mode_accessibility">Screen Reader</string>
+    <string name="screen_capture_scope_title">Choose sharing scope each time</string>
+    <string name="screen_capture_scope_user_choice_desc">Choose a single app or the entire screen in the system prompt</string>
+    <string name="screen_capture_scope_full_display_desc">Share the entire screen by default; system confirmation is still required</string>
     <string name="accessibility_status_enabled">Accessibility service enabled</string>
     <string name="accessibility_status_disabled">Accessibility service not enabled</string>
-    <string name="accessibility_enable_hint">Please enable FloatyAnswer accessibility service in system settings</string>
+    <string name="accessibility_enable_hint">Please enable the ChatMate AI accessibility service in system settings</string>
     <string name="status_reading_screen">📖 Reading screen content…</string>
     <string name="status_screen_read_failed">Screen reading failed, please ensure accessibility service is enabled</string>
     <string name="accessibility_fallback_to_screenshot">Accessibility service not enabled, switched to screenshot mode</string>
@@ -396,12 +400,12 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
 
     <!-- Parallel Settings -->
     <!-- Parallel Settings -->
-    <string name="setting_parallel_title">Parallel Answer Settings</string>
-    <string name="setting_parallel_desc">Parallel processing configuration for multi-question mode</string>
+    <string name="setting_parallel_title">Parallel Generation Settings</string>
+    <string name="setting_parallel_desc">Parallel processing for batched content</string>
     <string name="setting_parallel_mode">Enable Parallel Mode</string>
-    <string name="setting_parallel_mode_desc">Process multiple questions simultaneously for faster results</string>
+    <string name="setting_parallel_mode_desc">Generate replies for multiple items simultaneously</string>
     <string name="setting_max_concurrency">Max Concurrency: %d</string>
-    <string name="setting_max_concurrency_desc">Number of questions processed simultaneously, too high may trigger API rate limiting</string>
+    <string name="setting_max_concurrency_desc">Number of items processed simultaneously; high values may trigger API rate limits</string>
     <string name="setting_concurrency_warning">⚠️ High concurrency may trigger API rate limiting</string>
     <string name="setting_test_concurrency">Test Concurrency Performance</string>
     <string name="setting_test_llm">Test LLM</string>
@@ -410,8 +414,8 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
     <string name="testing_concurrency">Testing…</string>
     <string name="test_result_success">✅ %1$s connected, took %2$dms</string>
     <string name="test_result_error">❌ %1$s connection failed: %2$s</string>
-    <string name="status_parallel_answering">🤖 Answering (%1$d/%2$d)…</string>
-    <string name="status_parallel_partial_failed">⚠️ Some questions failed, showing successful results</string>
+    <string name="status_parallel_answering">🤖 Generating replies (%1$d/%2$d)…</string>
+    <string name="status_parallel_partial_failed">⚠️ Some items failed; successful results are shown</string>
 
     <!-- Stealth Mode -->
     <string name="setting_stealth_title">Stealth Mode</string>
@@ -420,15 +424,15 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
 
     <!-- Recording Mode -->
     <string name="recording_start">Recording mode enabled</string>
-    <string name="recording_stop">Recording stopped, %d question(s) captured</string>
+    <string name="recording_stop">Recording stopped, %d item(s) captured</string>
     <string name="recording_indicator">🔴 Recording (%d captured)</string>
-    <string name="recording_capturing">📸 Capturing question %d…</string>
-    <string name="recording_processing">⏳ Processing answers (%1$d/%2$d complete)…</string>
-    <string name="recording_all_done">✅ All done (%d question(s))</string>
+    <string name="recording_capturing">📸 Capturing item %d…</string>
+    <string name="recording_processing">⏳ Generating replies (%1$d/%2$d complete)…</string>
+    <string name="recording_all_done">✅ All done (%d item(s))</string>
     <string name="recording_all_done_dedup">✅ All done (%1$d captured, %2$d duplicate(s) skipped, %3$d valid)</string>
-    <string name="recording_no_valid_answers">Recording finished, but no valid answers were obtained</string>
-    <string name="recording_no_captures">No questions captured</string>
-    <string name="recording_concurrency_limit">Concurrency limit reached (%1$d/%2$d), wait for current questions to finish</string>
+    <string name="recording_no_valid_answers">Recording finished, but no valid replies were obtained</string>
+    <string name="recording_no_captures">No chat content captured</string>
+    <string name="recording_concurrency_limit">Concurrency limit reached (%1$d/%2$d); wait for current items to finish</string>
     <string name="quick_toggle_record">Record</string>
 
     <!-- Quick Button Layout Mode -->
@@ -460,7 +464,7 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
     <string name="search_model_not_supported_hint">Current model does not support web search (tool calling); search will be silently disabled</string>
 
     <!-- Recording result card progress -->
-    <string name="recording_processing_header">Fetching answers (%1$d/%2$d)</string>
+    <string name="recording_processing_header">Generating replies (%1$d/%2$d)</string>
     <string name="recording_done_header">All Done (%1$d total)</string>
     <string name="recording_more_coming">More coming…</string>
 
@@ -473,7 +477,7 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
     <string name="debug_export_success">Logs exported</string>
     <string name="debug_export_failed">Log export failed</string>
     <string name="debug_no_logs">No log files available</string>
-    <string name="debug_log_share_title">FloatyAnswer Debug Logs</string>
+    <string name="debug_log_share_title">ChatMate AI Debug Logs</string>
 
     <!-- Enhanced Error Messages -->
     <string name="error_api_empty_stream">AI returned no valid content. Check:
@@ -482,12 +486,12 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
 3. If using a reasoning model (R1), try a non-reasoning model</string>
     <string name="error_api_http_status">API returned error (HTTP %1$d), check API URL and Key</string>
     <string name="error_network_unavailable">Network unavailable, check connection</string>
-    <string name="error_llm_timeout">AI response timed out (60s). Try:
+    <string name="error_llm_timeout">AI response timed out after 180 seconds for one request. Try:
 1. Check network
 2. Use a faster model
 3. Disable web search</string>
     <string name="error_llm_unknown">AI request failed: %s
 Try: check API config, restart app, or export logs</string>
-    <string name="error_multi_question_all_failed">All questions failed, check API configuration</string>
+    <string name="error_multi_question_all_failed">All items failed; check the API configuration</string>
     <string name="error_multi_question_partial">%1$d succeeded, %2$d failed</string>
 </resources>

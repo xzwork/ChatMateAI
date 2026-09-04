@@ -54,7 +54,7 @@ interface CaptureHandlerCallbacks {
 
     // ── Flow control ───────────────────────────────────────────────────
     /** Called when recognition succeeds — text + optional vision result. */
-    fun onTextRecognized(text: String, visionResult: VisionFilterResult?)
+    fun onTextRecognized(text: String, visionResult: VisionFilterResult?, fromScreenText: Boolean = false)
 
     /** Called for recording captures — delegates directly to coordinator. */
     fun onRecordingBitmap(bitmap: Bitmap)
@@ -112,6 +112,7 @@ class CaptureHandler(
     private val context: Context
 ) {
     private var captureCounter = 0
+    @Volatile private var forceScreenshotOnce = false
 
     // ── Delays (companion for visibility to inline code) ───────────────
     companion object {
@@ -162,7 +163,7 @@ class CaptureHandler(
                         return@launch
                     }
                     if (!pipeline.looksLikeQuestion(screenText)) {
-                        callbacks.showError("未识别到题目")
+                        callbacks.showError("未识别到有效聊天内容")
                         return@launch
                     }
                     // P1-4: 文本路径对称守卫——stop 后丢弃迟到文本，避免计数分叉
@@ -195,7 +196,7 @@ class CaptureHandler(
                                     return@launch
                                 }
                                 if (!pipeline.looksLikeQuestion(screenText)) {
-                                    callbacks.showError("未识别到题目")
+                                    callbacks.showError("未识别到有效聊天内容")
                                     return@launch
                                 }
                                 // P1-4: 回退文本路径对称守卫
@@ -346,15 +347,17 @@ class CaptureHandler(
                 callbacks.setShowAnswer(false)
                 callbacks.setStatus(FloatingStatus.Idle)
 
-                // Accessibility mode
-                if (AppConfig.isAccessibilityCaptureMode()) {
+                // Hybrid recognition: prefer accessibility text whenever available,
+                // while still keeping screenshot OCR/VLM as the automatic fallback.
+                val forceScreenshot = forceScreenshotOnce.also { forceScreenshotOnce = false }
+                if (!forceScreenshot && ScreenReaderService.isActive) {
                     handleAccessibilityCapture()
                     return@launch
                 }
 
                 // MediaProjection guard
                 if (screenCaptureManager?.isReady != true) {
-                    callbacks.showError("截图权限未授权，请在主页重新点击\"进入答题模式\"")
+                    callbacks.showError("截图权限未授权，请在首页重新开启聊天助手")
                     return@launch
                 }
 
@@ -405,6 +408,14 @@ class CaptureHandler(
         callbacks.setCurrentFetchJob(job)
     }
 
+    /** Explicit retry requested from the recognition review screen. */
+    fun recognizeWithScreenshot() {
+        callbacks.getCurrentFetchJob()?.cancel()
+        callbacks.setCurrentFetchJob(null)
+        forceScreenshotOnce = true
+        handleCapture()
+    }
+
     // ── Accessibility ──────────────────────────────────────────────────
 
     private suspend fun handleAccessibilityCapture() {
@@ -417,47 +428,31 @@ class CaptureHandler(
         val screenText = readScreenWithRetry()
 
         if (screenText.isNullOrBlank()) {
-            val enabled = ScreenReaderService.isAccessibilityServiceEnabled(context)
-            val msg = when {
-                !enabled -> "无障碍服务未启用"
-                !ScreenReaderService.isActive -> "无障碍服务已启用但未连接，请在系统设置中关闭后重新开启"
-                else -> "无法读取屏幕内容，请确保当前页面有可见文字"
-            }
-            callbacks.showError(msg)
+            callbacks.setStatusMessage("屏幕文字不可用，正在改用截图…")
+            captureAndRecognizeScreenshot()
             return
         }
-        // Text-only mode: validate screen text before proceeding.
-        // VLM mode: always try — VLM can see questions that text extraction misses.
-        val hasQuestionText = pipeline.looksLikeQuestion(screenText)
+        callbacks.setStatusMessage("识别完成")
+        callbacks.onTextRecognized(screenText, null, fromScreenText = true)
+    }
 
-        // VLM mode: screenshot + vision analysis
-        if (callbacks.isVisionEnabled() && screenCaptureManager?.isReady == true) {
-            callbacks.setCaptureInProgress(true)
-            callbacks.setStatus(FloatingStatus.Capturing)
-            delay(COMPOSE_DELAY_MS)
-            val wasStealth = callbacks.isStealthModeEnabled()
+    private suspend fun captureAndRecognizeScreenshot() {
+        if (screenCaptureManager?.isReady != true) {
+            callbacks.showError("截图权限不可用，请返回主页重新启动助手")
+            return
+        }
+        val wasStealth = callbacks.isStealthModeEnabled()
+        callbacks.setCaptureInProgress(true)
+        try {
             callbacks.setWindowAlpha(0f)
-            callbacks.setFlagSecure(enabled = false)
+            callbacks.setFlagSecure(false)
             delay(FLAG_SECURE_DELAY_MS)
-            val bitmap = screenCaptureManager?.captureScreen()
-                callbacks.setWindowAlpha(if (wasStealth) Constants.STEALTH_ALPHA else Constants.VISIBLE_ALPHA)
-                if (wasStealth) { callbacks.setFlagSecure(enabled = true) }
+            val bitmap = withTimeout(8_000L) { screenCaptureManager.captureScreen() }
+            dispatchCropThenRecognize(bitmap)
+        } finally {
+            callbacks.setWindowAlpha(if (wasStealth) Constants.STEALTH_ALPHA else Constants.VISIBLE_ALPHA)
+            if (wasStealth) callbacks.setFlagSecure(true)
             callbacks.setCaptureInProgress(false)
-            if (bitmap != null) {
-                processBitmapWithVlm(bitmap)
-            } else if (hasQuestionText) {
-                callbacks.setStatusMessage("识别完成")
-                callbacks.onTextRecognized(screenText, null)
-            } else {
-                callbacks.showError("截图失败，且未识别到题目文本")
-            }
-        } else {
-            if (!hasQuestionText) {
-                callbacks.showError("未识别到题目")
-                return
-            }
-            callbacks.setStatusMessage("识别完成")
-            callbacks.onTextRecognized(screenText, null)
         }
     }
 
@@ -630,7 +625,7 @@ class CaptureHandler(
                 bitmap.recycle()
                 callbacks.setStatusMessage("识别完成")
                 if (!pipeline.looksLikeQuestion(recognizedText)) {
-                    callbacks.showError("未识别到题目")
+                    callbacks.showError("未识别到有效聊天内容")
                     return
                 }
                 callbacks.onTextRecognized(recognizedText, null)
@@ -649,12 +644,12 @@ class CaptureHandler(
             .onSuccess { filter ->
                 bitmap.recycle()
                 if (!filter.hasQuestions) {
-                    callbacks.showError("未识别到题目")
+                    callbacks.showError("未识别到有效聊天内容")
                     return
                 }
                 callbacks.setStatusMessage(
-                    if (filter.questionCount > 1) "检测到 ${filter.questionCount} 道题目"
-                    else "检测到题目"
+                    if (filter.questionCount > 1) "识别到 ${filter.questionCount} 条内容"
+                    else "已识别聊天内容"
                 )
                 if (filter.extractedText.isBlank()) {
                     callbacks.showError("视觉模型未提取到文本")

@@ -18,7 +18,7 @@ class ApiTimeoutRegressionTest {
 
     // ═══════════════════════════════════════════════════════════════════
     // BF-001: OpenAIClient readTimeout 与 withTimeout 对齐
-    // readTimeout(60s) = withTimeout(60s)，避免 OkHttp 先于协程炸
+    // readTimeout(180s) = withTimeout(180s)，避免 OkHttp 先于协程炸
     // ═══════════════════════════════════════════════════════════════════
 
     @Test
@@ -67,7 +67,7 @@ class ApiTimeoutRegressionTest {
     // ═══════════════════════════════════════════════════════════════════
     // BF-002: OpenAIVisionProvider readTimeout 与 withTimeout 对齐
     // bug: readTimeout(30s) < withTimeout(60s), execute() 不可取消
-    // fix: readTimeout→120s, callTimeout→130s, withTimeout→120s, enqueue替代execute
+    // fix: readTimeout→180s, callTimeout→190s, withTimeout→180s, enqueue替代execute
     // ═══════════════════════════════════════════════════════════════════
 
     @Test
@@ -88,28 +88,28 @@ class ApiTimeoutRegressionTest {
     }
 
     @Test
-    fun `BF-002 VisionProvider readTimeout is 120s`() {
+    fun `BF-002 VisionProvider readTimeout is 180s`() {
         assertEquals(
-            "视觉模型需要更长超时：120 秒",
-            120L,
+            "视觉模型需要更长超时：180 秒",
+            180L,
             OpenAIVisionProvider.READ_TIMEOUT_SEC
         )
     }
 
     @Test
-    fun `BF-002 VisionProvider withTimeout is 120s`() {
+    fun `BF-002 VisionProvider withTimeout is 180s`() {
         assertEquals(
-            "视觉模型 withTimeout 应为 120 秒",
-            120_000L,
+            "视觉模型 withTimeout 应为 180 秒",
+            180_000L,
             OpenAIVisionProvider.WITH_TIMEOUT_MS
         )
     }
 
     @Test
-    fun `BF-002 VisionProvider callTimeout is 130s`() {
+    fun `BF-002 VisionProvider callTimeout is 190s`() {
         assertEquals(
-            "视觉模型 callTimeout 应为 130 秒",
-            130L,
+            "视觉模型 callTimeout 应为 190 秒",
+            190L,
             OpenAIVisionProvider.CALL_TIMEOUT_SEC
         )
     }

@@ -84,7 +84,7 @@ internal object CaptureConfig {
 
     /**
      * 保存采集模式
-     * @param mode CAPTURE_MODE_SCREENSHOT 或 CAPTURE_MODE_ACCESSIBILITY
+     * @param mode 混合、屏幕读取或截图
      */
     fun saveCaptureMode(mode: String) {
         ConfigStorage.requireMmkv().encode(ConfigStorage.KEY_CAPTURE_MODE, mode)
@@ -92,10 +92,11 @@ internal object CaptureConfig {
 
     /**
      * 获取采集模式
-     * @return 采集模式，默认为截图模式
+     * @return 采集模式，默认为混合模式
      */
     fun getCaptureMode(): String {
-        return ConfigStorage.requireMmkv().decodeString(ConfigStorage.KEY_CAPTURE_MODE, ConfigStorage.CAPTURE_MODE_SCREENSHOT) ?: ConfigStorage.CAPTURE_MODE_SCREENSHOT
+        return ConfigStorage.requireMmkv().decodeString(ConfigStorage.KEY_CAPTURE_MODE, ConfigStorage.CAPTURE_MODE_HYBRID)
+            ?: ConfigStorage.CAPTURE_MODE_HYBRID
     }
 
     /**
@@ -103,6 +104,16 @@ internal object CaptureConfig {
      */
     fun isAccessibilityCaptureMode(): Boolean {
         return getCaptureMode() == ConfigStorage.CAPTURE_MODE_ACCESSIBILITY
+    }
+
+    /** Whether Android should offer single-app versus full-screen sharing. */
+    fun saveScreenCaptureUserChoice(enabled: Boolean) {
+        ConfigStorage.requireMmkv().encode(ConfigStorage.KEY_SCREEN_CAPTURE_USER_CHOICE, enabled)
+    }
+
+    /** Defaults to full-display capture, which removes the source-selection step. */
+    fun getScreenCaptureUserChoice(): Boolean {
+        return ConfigStorage.requireMmkv().decodeBool(ConfigStorage.KEY_SCREEN_CAPTURE_USER_CHOICE, false)
     }
 
     // ========== 应用设置相关 ==========
@@ -117,10 +128,10 @@ internal object CaptureConfig {
 
     /**
      * 获取自动提交设置
-     * @return 是否启用自动提交，默认为true
+     * @return 是否启用自动提交，默认为false
      */
     fun getAutoSubmit(): Boolean {
-        return ConfigStorage.requireMmkv().decodeBool(ConfigStorage.KEY_AUTO_SUBMIT, true)
+        return ConfigStorage.requireMmkv().decodeBool(ConfigStorage.KEY_AUTO_SUBMIT, false)
     }
 
     /**

@@ -65,7 +65,7 @@ internal fun CaptureModeCard(t: Th, scrollState: androidx.compose.foundation.Scr
         Column {
             Text("采集模式", style = DW.TitleMedium.copy(color = t.ob))
             Spacer(Modifier.height(12.dp))
-            Text("题目识别方式", style = DW.BodySmall.copy(color = t.osv), modifier = Modifier.padding(bottom = 10.dp))
+            Text("聊天识别方式", style = DW.BodySmall.copy(color = t.osv), modifier = Modifier.padding(bottom = 10.dp))
             Row(Modifier.fillMaxWidth(), horizontalArrangement = Arrangement.spacedBy(8.dp)) {
                 listOf("截图模式", "屏幕读取").forEach { mode ->
                     key(mode) {
@@ -95,7 +95,7 @@ internal fun CaptureModeCard(t: Th, scrollState: androidx.compose.foundation.Scr
                 if (!isAccessibilityEnabled) {
                     Spacer(Modifier.height(8.dp))
                     Text(
-                        "请在系统设置中开启 AI答题助手 的无障碍服务 →",
+                        "请在系统设置中开启 ChatMate AI 的无障碍服务 →",
                         style = DW.BodySmall.copy(color = t.p),
                         modifier = Modifier.clickable {
                             context.startActivity(Intent(Settings.ACTION_ACCESSIBILITY_SETTINGS).addFlags(Intent.FLAG_ACTIVITY_NEW_TASK))

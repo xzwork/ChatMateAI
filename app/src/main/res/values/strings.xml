@@ -1,48 +1,49 @@
 <resources>
     <!-- 应用名称 -->
-    <string name="app_name">FloatyAnswer</string>
+    <string name="app_name">ChatMate AI</string>
+    <string name="quick_tile_label">聊天助手</string>
 
     <!-- 主界面 -->
-    <string name="main_title">FloatyAnswer</string>
-    <string name="main_subtitle">截屏 · 识别 · AI 答题，一气呵成</string>
+    <string name="main_title">ChatMate AI</string>
+    <string name="main_subtitle">看懂聊天，辅助你更好地回复</string>
     <string name="status_label">当前状态</string>
-    <string name="status_running">答题模式运行中</string>
-    <string name="status_running_desc">悬浮窗已显示</string>
-    <string name="status_stopped">答题模式未启动</string>
-    <string name="status_stopped_desc">点击下方按钮启动</string>
-    <string name="button_start_mode">✦  进入答题模式</string>
+    <string name="status_running">聊天助手运行中</string>
+    <string name="status_running_desc">悬浮按钮已显示</string>
+    <string name="status_stopped">聊天助手已关闭</string>
+    <string name="status_stopped_desc">使用首页开关启动</string>
+    <string name="button_start_mode">启动聊天助手</string>
     <string name="button_start_mode_disabled">请先配置模型</string>
-    <string name="button_stop_mode">退出答题模式</string>
-    <string name="stop_confirm_title">停止答题</string>
-    <string name="stop_confirm_message">确定要退出答题模式吗？悬浮窗和截图服务将停止。</string>
+    <string name="button_stop_mode">停止聊天助手</string>
+    <string name="stop_confirm_title">停止聊天助手</string>
+    <string name="stop_confirm_message">确定要停止吗？悬浮窗和识别服务将关闭。</string>
 
     <!-- 使用说明 -->
-    <string name="usage_guide_title">使用说明及常见问题</string>
-    <string name="usage_step_0">0. 配置好AI模型</string>
-    <string name="usage_step_1">1. 点击下方按钮进入答题模式</string>
+    <string name="usage_guide_title">使用说明</string>
+    <string name="usage_step_0">0. 配置 AI 模型与系统提示词</string>
+    <string name="usage_step_1">1. 在首页开启聊天助手</string>
     <string name="usage_step_2">2. 应用将在后台运行，显示悬浮按钮</string>
     <string name="usage_step_3">3. 点击悬浮按钮进行截图</string>
-    <string name="usage_step_4">4. 确认识别的题目文本</string>
-    <string name="usage_step_5">5. AI将自动分析并给出答案</string>
+    <string name="usage_step_4">4. 确认识别到的聊天内容</string>
+    <string name="usage_step_5">5. AI 将生成个性化回复建议</string>
     <string name="usage_step_6_text">6. 如果识别不出来，请考虑</string>
     <string name="usage_step_6_url" translatable="false">https://jingyan.baidu.com/article/7f41ecec6bf8de183c095c29.html</string>
     <string name="usage_step_7_text">7. 获取悬浮窗权限的时候，提示"系统已拒绝向此应用授予访问权限"</string>
     <string name="usage_step_7_link">请手动设置"显示其它应用的上层"</string>
     <string name="usage_step_7_url" translatable="false">https://bbs.oneplus.com/thread/5077724</string>
-    <string name="usage_step_8">8. 为了提高识别率，尽量裁剪到单题目。目前不兼容多题目</string>
+    <string name="usage_step_8">8. 如果读取结果不准确，可切换为截图识别</string>
 
     <!-- 设置 -->
     <string name="settings_title">设置</string>
-    <string name="setting_auto_submit">自动提交答案</string>
-    <string name="setting_auto_submit_desc">识别后直接获取答案，不显示确认对话框</string>
+    <string name="setting_auto_submit">自动生成回复</string>
+    <string name="setting_auto_submit_desc">识别后直接生成回复，不显示确认对话框</string>
     <string name="setting_auto_copy">自动复制到剪贴板</string>
-    <string name="setting_auto_copy_desc">生成答案后自动复制到剪贴板</string>
-    <string name="setting_display_control_title">答题卡片显示内容</string>
-    <string name="setting_display_control_desc">自定义答题卡片显示的内容</string>
-    <string name="setting_show_question">显示题目</string>
-    <string name="setting_show_question_desc">在答题卡片中显示题目内容</string>
-    <string name="setting_show_options">显示选项</string>
-    <string name="setting_show_options_desc">在答题卡片中显示选项内容</string>
+    <string name="setting_auto_copy_desc">生成回复后自动复制到剪贴板</string>
+    <string name="setting_display_control_title">回复卡片显示内容</string>
+    <string name="setting_display_control_desc">自定义回复卡片显示的内容</string>
+    <string name="setting_show_question">显示聊天内容</string>
+    <string name="setting_show_question_desc">在回复卡片中显示识别到的聊天内容</string>
+    <string name="setting_show_options">显示补充内容</string>
+    <string name="setting_show_options_desc">在回复卡片中显示补充内容</string>
 
     <!-- 悬浮窗外观设置 -->
     <string name="setting_float_window_title">悬浮窗外观</string>
@@ -59,7 +60,7 @@
     <string name="float_toggle_search_no_provider">请先在设置中启用至少一个搜索服务商</string>
 
     <!-- 悬浮窗卡片与按钮 -->
-    <string name="float_answer_title">答案</string>
+    <string name="float_answer_title">推荐回复</string>
     <string name="float_quick_vlm">VLM</string>
     <string name="float_quick_search">联网</string>
     <string name="float_quick_reasoning">深度</string>
@@ -71,7 +72,7 @@
     <string name="image_recording_conflict">请先停止录制模式</string>
     <string name="float_prev_page">上一页</string>
     <string name="float_next_page">下一页</string>
-    <string name="float_question_index">第%1$d题</string>
+    <string name="float_question_index">第%1$d条</string>
 
     <!-- 外观模式设置 -->
     <string name="setting_theme_title">外观模式</string>
@@ -80,8 +81,8 @@
     <string name="setting_theme_dark">深色模式</string>
 
     <!-- 本次答题设置 -->
-    <string name="session_settings_title">本次答题设置</string>
-    <string name="session_settings_desc">根据题型和范围设置，提高答题准确率</string>
+    <string name="session_settings_title">本次识别设置</string>
+    <string name="session_settings_desc">调整识别范围，提高聊天内容识别准确率</string>
     <string name="question_type_label">题型选择（可多选）</string>
     <string name="question_type_single">单选题</string>
     <string name="question_type_multiple">多选题</string>
@@ -125,7 +126,7 @@
     <!-- 关于页面 -->
     <string name="about_title">关于</string>
     <string name="about_app_intro_title">应用简介</string>
-    <string name="about_app_intro">一个基于AI的Android答题助手应用，使用截图和OCR技术识别题目，通过AI提供答案。</string>
+    <string name="about_app_intro">一款 Android AI 聊天辅助工具，可读取或截图识别聊天内容，并生成个性化回复建议。</string>
     <string name="about_version_title">版本信息</string>
     <string name="about_version">版本 %1$s (%2$d)</string>
     <string name="about_libraries_title">核心第三方库</string>
@@ -152,7 +153,7 @@
     <string name="about_contact_email_intent_title">邮件联系</string>
     <string name="about_contact_email_copied">邮箱已复制：%s</string>
     <string name="about_restart_dialog_title">重启应用</string>
-    <string name="about_restart_dialog_message">需要重启应用才能切换语言。注意：重启会中断当前答题模式。确定要重启吗？</string>
+    <string name="about_restart_dialog_message">需要重启应用才能切换语言。注意：重启会中断当前聊天助手。确定要重启吗？</string>
     <string name="button_confirm">确定</string>
     <string name="button_cancel">取消</string>
 
@@ -162,11 +163,11 @@
 
     <!-- Toast提示 -->
     <string name="toast_model_not_configured">请先配置AI模型\n右上角-设置-自定义模式设置</string>
-    <string name="toast_permission_overlay_required">需要悬浮窗权限才能使用答题模式</string>
-    <string name="toast_permission_capture_required">需要截图权限才能使用答题模式</string>
-    <string name="toast_mode_started">答题模式已启动</string>
-    <string name="toast_mode_stopped">答题模式已停止</string>
-    <string name="toast_mode_start_failed">启动答题模式失败: %s</string>
+    <string name="toast_permission_overlay_required">需要悬浮窗权限才能使用聊天助手</string>
+    <string name="toast_permission_capture_required">需要截图权限才能使用智能截图兜底</string>
+    <string name="toast_mode_started">聊天助手已启动</string>
+    <string name="toast_mode_stopped">聊天助手已停止</string>
+    <string name="toast_mode_start_failed">启动聊天助手失败: %s</string>
 
     <!-- 内容描述 (Accessibility) -->
     <string name="cd_back_button">返回按钮</string>
@@ -190,19 +191,19 @@
     <string name="confirm_text_title">确认识别内容</string>
     <string name="confirm_text_label">识别的文本（可编辑）</string>
     <string name="confirm_text_placeholder">请编辑或确认识别的文本</string>
-    <string name="button_confirm_and_answer">确认并获取答案</string>
+    <string name="button_confirm_and_answer">确认并生成回复</string>
     <string name="toast_text_empty">文本为空</string>
-    <string name="toast_getting_answer">正在获取答案...</string>
+    <string name="toast_getting_answer">正在生成回复...</string>
 
     <!-- 悬浮窗 -->
-    <string name="floating_answer_title">AI 响应</string>
-    <string name="notification_content">答题模式运行中</string>
-    <string name="stop_service">停止答题</string>
+    <string name="floating_answer_title">推荐回复</string>
+    <string name="notification_content">聊天助手运行中</string>
+    <string name="stop_service">关闭助手</string>
 
     <!-- API错误消息 -->
     <string name="error_empty_response">响应体为空</string>
-    <string name="error_no_answer_content">未获取到答案内容</string>
-    <string name="error_parse_question_failed">无法解析题目</string>
+    <string name="error_no_answer_content">未获取到回复内容</string>
+    <string name="error_parse_question_failed">无法解析聊天内容</string>
     <string name="error_connection_test_failed">连接测试失败: %s</string>
     <string name="error_unknown">未知错误</string>
     <string name="error_api_config_invalid">API配置无效，请在设置中配置API信息</string>
@@ -233,9 +234,9 @@
     <string name="default_question_type">单选题</string>
 
     <!-- 答案显示面板 -->
-    <string name="answer_section_question_title">【题目】</string>
-    <string name="answer_section_options_title">【选项】</string>
-    <string name="answer_section_answer_title">【答案】</string>
+    <string name="answer_section_question_title">【聊天内容】</string>
+    <string name="answer_section_options_title">【补充信息】</string>
+    <string name="answer_section_answer_title">【推荐回复】</string>
 
     <!-- Dialog相关字符串 -->
     <string name="dialog_language_title">选择语言 / Select Language</string>
@@ -244,7 +245,7 @@
     <string name="dialog_language_cancel">取消</string>
 
     <string name="dialog_model_setup_title">AI模型设置</string>
-    <string name="dialog_model_setup_message">为了使用AI答题功能，您需要先配置API参数。是否立即前往设置？</string>
+    <string name="dialog_model_setup_message">为了生成回复建议，您需要先配置 API 参数。是否立即前往设置？</string>
     <string name="dialog_model_setup_confirm">前往设置</string>
     <string name="dialog_model_setup_cancel">取消</string>
 
@@ -340,9 +341,9 @@
     <string name="status_select_region">✂️ 请选择识别区域…</string>
     <string name="status_recognizing">🔍 OCR识别中…</string>
     <string name="status_recognized">✅ 识别完成</string>
-    <string name="status_getting_answer">🤖 AI分析中…</string>
-    <string name="status_answer_copied">✅ 答案已复制</string>
-    <string name="status_answer_generated">✅ 答案已生成</string>
+    <string name="status_getting_answer">🤖 AI 正在生成…</string>
+    <string name="status_answer_copied">✅ 回复已复制</string>
+    <string name="status_answer_generated">✅ 回复已生成</string>
     <string name="status_error_prefix">❌ %s</string>
     <string name="status_success_prefix">✅ %s</string>
     <string name="status_operation_failed">操作失败: %s</string>
@@ -351,13 +352,13 @@
     <string name="status_recognition_failed">文字识别失败: %s</string>
     <string name="status_recognition_error">识别失败: %s</string>
     <string name="status_ai_analysis_failed">AI分析失败: %s</string>
-    <string name="status_fetch_answer_failed">获取答案失败: %s</string>
-    <string name="notification_channel_name">FloatyAnswer 服务</string>
-    <string name="clipboard_label">AI答案</string>
+    <string name="status_fetch_answer_failed">生成回复失败: %s</string>
+    <string name="notification_channel_name">ChatMate AI 服务</string>
+    <string name="clipboard_label">AI 回复</string>
 
     <!-- 视觉模型相关 -->
     <string name="vision_settings_title">视觉模型设置</string>
-    <string name="vision_settings_desc">使用视觉模型分析截图，直接提取题目文本（替代OCR）</string>
+    <string name="vision_settings_desc">使用视觉模型理解聊天截图并提取消息文本</string>
     <string name="vision_enable_label">启用视觉模型</string>
     <string name="vision_enable_desc">使用视觉模型替代OCR识别，适合噪音较多的页面</string>
     <string name="vision_provider_label">视觉模型接口</string>
@@ -371,9 +372,9 @@
     <string name="hint_vision_model">例如: deepseek-chat 或 gpt-4o-mini</string>
     <string name="vision_reset_defaults">重置为默认值</string>
     <string name="status_vision_analyzing">👁️ 视觉模型分析中…</string>
-    <string name="status_vision_detected_single">✅ 检测到 1 道题目</string>
-    <string name="status_vision_detected_multi">📋 检测到 %d 道题目</string>
-    <string name="status_vision_no_question">⚠️ 未检测到题目</string>
+    <string name="status_vision_detected_single">✅ 已识别聊天内容</string>
+    <string name="status_vision_detected_multi">📋 已识别 %d 条内容</string>
+    <string name="status_vision_no_question">⚠️ 未识别到聊天内容</string>
     <string name="status_vision_fallback">⚠️ 视觉分析失败，请重试</string>
 
     <!-- 采集模式设置 -->
@@ -381,9 +382,12 @@
     <string name="setting_capture_mode_desc">选择获取屏幕内容的方式</string>
     <string name="capture_mode_screenshot">截图识别</string>
     <string name="capture_mode_accessibility">屏幕读取</string>
+    <string name="screen_capture_scope_title">每次选择共享范围</string>
+    <string name="screen_capture_scope_user_choice_desc">开启后可在系统界面选择单个应用或整个屏幕</string>
+    <string name="screen_capture_scope_full_display_desc">关闭后默认共享整个屏幕，但仍需确认系统授权</string>
     <string name="accessibility_status_enabled">无障碍服务已开启</string>
     <string name="accessibility_status_disabled">无障碍服务未开启</string>
-    <string name="accessibility_enable_hint">请在系统设置中开启 FloatyAnswer 的无障碍服务</string>
+    <string name="accessibility_enable_hint">请在系统设置中开启 ChatMate AI 的无障碍服务</string>
     <string name="status_reading_screen">📖 正在读取屏幕内容…</string>
     <string name="status_screen_read_failed">屏幕读取失败，请确保已开启无障碍服务</string>
     <string name="accessibility_fallback_to_screenshot">无障碍服务未开启，已自动切换为截图识别</string>
@@ -396,12 +400,12 @@
 
     <!-- 并发设置 -->
     <!-- 并发设置 -->
-    <string name="setting_parallel_title">并发答题设置</string>
-    <string name="setting_parallel_desc">多题模式下的并行处理配置</string>
+    <string name="setting_parallel_title">并发生成设置</string>
+    <string name="setting_parallel_desc">批量内容的并行处理配置</string>
     <string name="setting_parallel_mode">启用并发模式</string>
-    <string name="setting_parallel_mode_desc">多题时同时请求AI，显著提升答题速度</string>
+    <string name="setting_parallel_mode_desc">批量内容同时请求 AI，提升回复生成速度</string>
     <string name="setting_max_concurrency">最大并发数：%d</string>
-    <string name="setting_max_concurrency_desc">同时处理的题目数量，过高可能触发API限流</string>
+    <string name="setting_max_concurrency_desc">同时处理的内容数量，过高可能触发 API 限流</string>
     <string name="setting_concurrency_warning">⚠️ 并发数过高，可能触发API限流</string>
     <string name="setting_test_concurrency">测试并发性能</string>
     <string name="setting_test_llm">测试LLM</string>
@@ -410,8 +414,8 @@
     <string name="testing_concurrency">测试中…</string>
     <string name="test_result_success">✅ %1$s 连接成功，耗时 %2$dms</string>
     <string name="test_result_error">❌ %1$s 连接失败：%2$s</string>
-    <string name="status_parallel_answering">🤖 答题中 (%1$d/%2$d)…</string>
-    <string name="status_parallel_partial_failed">⚠️ 部分题目答题失败，已显示成功的结果</string>
+    <string name="status_parallel_answering">🤖 正在生成回复 (%1$d/%2$d)…</string>
+    <string name="status_parallel_partial_failed">⚠️ 部分内容处理失败，已显示成功的结果</string>
 
     <!-- Stealth Mode -->
     <string name="setting_stealth_title">隐身模式</string>
@@ -431,15 +435,15 @@
 
     <!-- 录制模式 -->
     <string name="recording_start">录制模式已开启</string>
-    <string name="recording_stop">录制模式已结束，共 %d 题</string>
-    <string name="recording_indicator">🔴 录制中 (已拍 %d 题)</string>
-    <string name="recording_capturing">📸 正在截取第 %d 题…</string>
-    <string name="recording_processing">⏳ 正在处理答案 (%1$d/%2$d 题已完成)…</string>
-    <string name="recording_all_done">✅ 全部完成 (共 %d 题)</string>
-    <string name="recording_all_done_dedup">✅ 全部完成 (共拍 %1$d 题，去重 %2$d 题，有效 %3$d 题)</string>
-    <string name="recording_no_valid_answers">录制结束，但未获取到有效答案</string>
-    <string name="recording_no_captures">未拍到任何题目</string>
-    <string name="recording_concurrency_limit">并发数已满 (%1$d/%2$d)，请等待当前题目处理完成</string>
+    <string name="recording_stop">录制模式已结束，共 %d 条</string>
+    <string name="recording_indicator">🔴 录制中 (已采集 %d 条)</string>
+    <string name="recording_capturing">📸 正在截取第 %d 条…</string>
+    <string name="recording_processing">⏳ 正在生成回复 (%1$d/%2$d 已完成)…</string>
+    <string name="recording_all_done">✅ 全部完成 (共 %d 条)</string>
+    <string name="recording_all_done_dedup">✅ 全部完成 (共采集 %1$d 条，去重 %2$d 条，有效 %3$d 条)</string>
+    <string name="recording_no_valid_answers">录制结束，但未获取到有效回复</string>
+    <string name="recording_no_captures">未采集到任何聊天内容</string>
+    <string name="recording_concurrency_limit">并发数已满 (%1$d/%2$d)，请等待当前内容处理完成</string>
     <string name="quick_toggle_record">录制模式</string>
 
     <!-- 厂商设置页面 -->
@@ -465,9 +469,9 @@
     <string name="search_model_not_supported_hint">当前模型不支持联网搜索（工具调用），搜索将静默停用</string>
 
     <!-- 录制结果卡片进度 -->
-    <string name="recording_processing_header">正在获取答案 (%1$d/%2$d)</string>
-    <string name="recording_done_header">全部完成 (共 %1$d 题)</string>
-    <string name="recording_more_coming">更多答题中…</string>
+    <string name="recording_processing_header">正在生成回复 (%1$d/%2$d)</string>
+    <string name="recording_done_header">全部完成 (共 %1$d 条)</string>
+    <string name="recording_more_coming">更多回复生成中…</string>
 
     <!-- 调试日志 -->
     <string name="debug_section_title">调试工具</string>
@@ -478,7 +482,7 @@
     <string name="debug_export_success">日志已导出</string>
     <string name="debug_export_failed">日志导出失败</string>
     <string name="debug_no_logs">暂无日志文件</string>
-    <string name="debug_log_share_title">FloatyAnswer 调试日志</string>
+    <string name="debug_log_share_title">ChatMate AI 调试日志</string>
 
     <!-- 增强错误信息 -->
     <string name="error_api_empty_stream">AI 未返回有效内容，请检查：
@@ -487,12 +491,12 @@
 3. 如果是推理模型（R1），可尝试在设置中切换非推理模型</string>
     <string name="error_api_http_status">API 返回错误 (HTTP %1$d)，请检查 API 地址和 Key</string>
     <string name="error_network_unavailable">网络不可用，请检查网络连接</string>
-    <string name="error_llm_timeout">AI 响应超时 (60s)，可尝试：
+    <string name="error_llm_timeout">AI 响应超时（单轮已等待 180 秒），可尝试：
 1. 检查网络状况
 2. 换用更快的模型
 3. 减少联网搜索</string>
     <string name="error_llm_unknown">AI 请求失败: %s
 可尝试：检查 API 配置、重启应用、或导出日志排查</string>
-    <string name="error_multi_question_all_failed">所有题目答题失败，请检查 API 配置</string>
-    <string name="error_multi_question_partial">%1$d 题成功，%2$d 题失败</string>
+    <string name="error_multi_question_all_failed">全部内容处理失败，请检查 API 配置</string>
+    <string name="error_multi_question_partial">%1$d 条成功，%2$d 条失败</string>
 </resources>

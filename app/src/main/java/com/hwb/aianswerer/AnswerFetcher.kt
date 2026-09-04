@@ -80,14 +80,14 @@ class AnswerFetcher(
                     }
 
                     // 联网搜索由 LLM 自主调用工具完成（预搜索注入已移除）
-                    callbacks.onStatus(FloatingStatus.GettingAnswer, "获取答案中…")
+                    callbacks.onStatus(FloatingStatus.GettingAnswer, "正在生成回复…")
 
                     val result = withTimeoutOrNull(ANSWER_TIMEOUT_MS) {
                         pipeline.askLlm(text, questionTypes, "")
                     }
                     if (result == null) {
                         AppLog.e("AnswerFetcher", "fetchAnswer timed out after ${ANSWER_TIMEOUT_MS}ms")
-                        callback(AnswerResult.Error("获取答案超时，请重试"))
+                        callback(AnswerResult.Error("生成回复超时，请重试"))
                         return@withLock
                     }
 
@@ -96,7 +96,7 @@ class AnswerFetcher(
                         .onSuccess { answers ->
                             if (answers.isEmpty()) {
                                 AppLog.w("AnswerFetcher", "empty answers from single-question path")
-                                callback(AnswerResult.Error("未获取到答案"))
+                                callback(AnswerResult.Error("未获取到回复"))
                             } else {
                                 callback(AnswerResult.Success(answers))
                             }
@@ -111,7 +111,7 @@ class AnswerFetcher(
                     throw e
                 } catch (e: Exception) {
                     AppLog.e("AnswerFetcher", "fetchAnswer unexpected: ${e.message}", e)
-                    callback(AnswerResult.Error("获取答案失败: ${e.message ?: ""}"))
+                    callback(AnswerResult.Error("生成回复失败: ${e.message ?: ""}"))
                 }
             }
         }
@@ -142,7 +142,7 @@ class AnswerFetcher(
 
         for ((idx, question) in questions.withIndex()) {
             callbacks.onStatus(FloatingStatus.GettingAnswer,
-                "获取答案中 (${idx + 1}/$totalQuestions)")
+                "正在生成回复 (${idx + 1}/$totalQuestions)")
             val result = pipeline.askLlm(question.text, questionTypes, "")
 
             result.onSuccess { answers -> allAnswers.addAll(answers) }
@@ -152,7 +152,7 @@ class AnswerFetcher(
         }
 
         return if (allAnswers.isNotEmpty()) AnswerResult.Success(allAnswers)
-        else AnswerResult.Error("所有题目答题失败")
+        else AnswerResult.Error("全部内容处理失败")
     }
 
     private suspend fun fetchParallel(
@@ -181,7 +181,7 @@ class AnswerFetcher(
                             val completed = completedCount.incrementAndGet()
                             withContext(Dispatchers.Main) {
                                 callbacks.onStatus(FloatingStatus.GettingAnswer,
-                                    "答题中 ($completed/$totalQuestions)")
+                                    "正在生成回复 ($completed/$totalQuestions)")
                             }
                         } catch (e: kotlinx.coroutines.TimeoutCancellationException) {
                             // M12: 超时也计入失败，否则部分超时时不提示"部分题目获取失败"
@@ -204,19 +204,19 @@ class AnswerFetcher(
         val ordered = allAnswers.filterNotNull().flatten()
         if (ordered.isNotEmpty()) {
             if (failedCount.get() > 0) {
-                callbacks.onToast("部分题目获取失败")
+                callbacks.onToast("部分内容处理失败")
             }
             return AnswerResult.Success(ordered)
         }
-        return AnswerResult.Error("所有题目答题失败")
+        return AnswerResult.Error("全部内容处理失败")
     }
 
     companion object {
         /**
          * 单题答题总超时。注意：withTimeoutOrNull 超时时会整体取消内部 askLlm（含其多轮工具循环），
-         * 超时后返回 null 并回调错误。60s 上限可能掐断合法的多轮工具搜索——
+         * 超时后返回 null 并回调错误。总时限放宽至 300s，避免慢模型或工具搜索被过早中断——
          * 录制路径使用更宽松的 RecordingCoordinator.recordingAnswerTimeoutMs（工具循环上限）。
          */
-        const val ANSWER_TIMEOUT_MS = 60_000L
+        const val ANSWER_TIMEOUT_MS = 300_000L
     }
 }

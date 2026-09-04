@@ -43,6 +43,7 @@ internal object ConfigStorage {
     internal const val KEY_LLM_TEMPERATURE = "llm_temperature"
     internal const val KEY_REASONING_EFFORT = "reasoning_effort"
     internal const val KEY_CAPTURE_MODE = "capture_mode"
+    internal const val KEY_SCREEN_CAPTURE_USER_CHOICE = "screen_capture_user_choice"
     internal const val KEY_STEALTH_MODE = "stealth_mode"
     internal const val KEY_WEB_SEARCH_PROVIDER = "web_search_provider"
     internal const val KEY_OUTPUT_LANGUAGE = "output_language"
@@ -78,6 +79,7 @@ internal object ConfigStorage {
     // 采集模式常量
     internal const val CAPTURE_MODE_SCREENSHOT = "screenshot"  // 截图 + OCR/VLM
     internal const val CAPTURE_MODE_ACCESSIBILITY = "accessibility"  // 无障碍读取屏幕
+    internal const val CAPTURE_MODE_HYBRID = "hybrid"  // 优先读屏，失败时截图
 
     // 快捷按钮布局模式常量
     internal const val QUICK_BUTTON_LAYOUT_ARC = "arc"           // 半圆弧形排列

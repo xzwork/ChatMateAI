@@ -113,7 +113,7 @@ internal fun MergedCard(t: Th, expandedMenu: MutableState<String?>) {
                 Column(Modifier.weight(1f)) {
                     Text("服务运行中", style = DW.TitleMedium.copy(color = t.ok))
                     Spacer(Modifier.height(2.dp))
-                    Text("随时准备帮你答题", style = DW.BodySmall.copy(color = t.osv))
+                    Text("随时准备帮你回复", style = DW.BodySmall.copy(color = t.osv))
                 }
                 Icon(LocalIcons.Lightbulb, "status", tint = t.ok, modifier = Modifier.size(28.dp))
             }

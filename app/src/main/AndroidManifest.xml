@@ -29,7 +29,9 @@
 
         <activity
             android:name=".MainActivity"
-            android:exported="true">
+            android:exported="true"
+            android:launchMode="singleTop"
+            android:theme="@style/Theme.AIAnswerer.Splash">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
                 <category android:name="android.intent.category.LAUNCHER" />
@@ -47,12 +49,6 @@
             android:name=".ModelSettingsActivity"
             android:exported="false"
             android:label="@string/model_settings_title" />
-
-        <!-- 厂商设置Activity -->
-        <activity
-            android:name=".providers.ProviderSettingsActivity"
-            android:exported="false"
-            android:label="@string/provider_settings_title" />
 
         <!-- 视觉模型厂商设置Activity -->
         <activity
@@ -90,6 +86,13 @@
             android:taskAffinity=""
             android:theme="@style/Theme.AIAnswerer" />
 
+        <!-- AI 聊天伴侣 -->
+        <activity android:name=".chat.ui.ChatCompanionActivity" android:exported="false" />
+        <activity android:name=".chat.ui.ChatDebugActivity" android:exported="false" />
+        <activity android:name=".chat.ui.ChatSettingsActivity" android:exported="false" />
+        <activity android:name=".chat.ui.SystemPromptSettingsActivity" android:exported="false" />
+        <activity android:name=".chat.ui.ConversationDetailActivity" android:exported="false" />
+
         <!-- 悬浮窗服务 -->
         <service
             android:name=".FloatingWindowService"
@@ -101,6 +104,24 @@
             <property
                 android:name="android.app.PROPERTY_SPECIAL_USE_FGS_SUBTYPE"
                 android:value="screenshot_capture_persistent" />
+        </service>
+
+        <service
+            android:name=".ChatAssistantTileService"
+            android:enabled="true"
+            android:exported="true"
+            android:icon="@drawable/ic_notification"
+            android:label="@string/quick_tile_label"
+            android:permission="android.permission.BIND_QUICK_SETTINGS_TILE">
+            <intent-filter>
+                <action android:name="android.service.quicksettings.action.QS_TILE" />
+            </intent-filter>
+            <meta-data
+                android:name="android.service.quicksettings.ACTIVE_TILE"
+                android:value="true" />
+            <meta-data
+                android:name="android.service.quicksettings.TOGGLEABLE_TILE"
+                android:value="true" />
         </service>
 
         <!-- 无障碍屏幕读取服务 -->

@@ -47,6 +47,7 @@ class FloatingWindowViewModel : ViewModel() {
         fun onRecordingBitmap(bitmap: Bitmap)
         fun onImageText(text: String)
         fun onImageBitmap(bitmap: Bitmap)
+        fun showRecognitionResults(text: String, fromScreenText: Boolean)
     }
 
     private var ctx: ServiceContext? = null
@@ -142,7 +143,6 @@ class FloatingWindowViewModel : ViewModel() {
             if (!isImageResultActive.value) {
                 AppLog.d("VM", "drop image result: no active image result window"); return
             }
-            val autoCopy = AppConfig.getAutoCopy()
             // Reuse the existing answer display pipeline
             // NOTE: paginatedAnswers MUST be set BEFORE showAnswer, otherwise
             // the snapshotFlow observer in FloatingWindowService creates
@@ -157,11 +157,8 @@ class FloatingWindowViewModel : ViewModel() {
                 (i + 1) to "第 ${i + 1} 题：${a.answer}"
             }
             showAnswer.value = true
-            val copyText = if (answers.size == 1) answers.first().answer
-                else answers.mapIndexed { i, a -> "第 ${i + 1} 题：${a.answer}" }.joinToString("\n")
-            if (autoCopy) ctx?.copyToClipboard(copyText)
             floatingStatus.value = FloatingStatus.Success
-            statusMessage.value = if (autoCopy) "答案已复制" else "答案已生成"
+            statusMessage.value = "内容已生成"
             isProcessingImages.value = false
         }
         override fun onProgressUpdate(collected: Int, total: Int) {
@@ -230,8 +227,8 @@ class FloatingWindowViewModel : ViewModel() {
         @Suppress("UNCHECKED_CAST")
         override fun getString(resId: Int, vararg args: Any?): String = ctx?.getString(resId, *(args as Array<out Any>)) ?: ""
 
-        override fun onTextRecognized(text: String, visionResult: VisionFilterResult?) {
-            onTextRecognized(text, visionResult, answerFetcher)
+        override fun onTextRecognized(text: String, visionResult: VisionFilterResult?, fromScreenText: Boolean) {
+            showRecognitionResults(text, fromScreenText)
         }
         override fun onRecordingBitmap(bitmap: Bitmap) { ctx?.onRecordingBitmap(bitmap) }
         override fun onImageText(text: String) { ctx?.onImageText(text) }
@@ -266,9 +263,14 @@ class FloatingWindowViewModel : ViewModel() {
 
     // ===== Business methods =====
 
-    fun onTextRecognized(text: String, visionResult: VisionFilterResult?, answerFetcher: AnswerFetcher?) {
+    fun showRecognitionResults(text: String, fromScreenText: Boolean = false) {
+        floatingStatus.value = FloatingStatus.Success
+        statusMessage.value = "识别完成，请确认内容"
+        ctx?.showRecognitionResults(text, fromScreenText)
+    }
+
+    fun requestAnswer(text: String, visionResult: VisionFilterResult?, answerFetcher: AnswerFetcher?) {
         if (answerFetcher == null) return
-        val autoCopy = AppConfig.getAutoCopy()
         // S3: 每次识别捕获当前代次；回调时若代次已过期（期间用户发起新捕获）则丢弃旧结果
         val gen = nextGeneration()
         answerFetcher.fetchAnswer(text, visionResult) { result ->
@@ -277,13 +279,13 @@ class FloatingWindowViewModel : ViewModel() {
                 return@fetchAnswer
             }
             when (result) {
-                is AnswerResult.Success -> vmScope.launch { handleAnswerSuccess(result.answers, autoCopy) }
+                is AnswerResult.Success -> vmScope.launch { handleAnswerSuccess(result.answers) }
                 is AnswerResult.Error -> ctx?.showErrorToUser(result.message)
             }
         }
     }
 
-    private suspend fun handleAnswerSuccess(aiAnswers: List<AIAnswer>, autoCopy: Boolean) {
+    private suspend fun handleAnswerSuccess(aiAnswers: List<AIAnswer>) {
         val showQuestion = AppConfig.getShowAnswerCardQuestion()
         val showOptions = AppConfig.getShowAnswerCardOptions()
         // P0-5: 普通答题开始展示 → 关闭多图结果窗口，旧多图结果到达时被 onResult 守卫丢弃
@@ -304,21 +306,10 @@ class FloatingWindowViewModel : ViewModel() {
             }.joinToString("\n\n")
         }
 
-        if (autoCopy) {
-            val copyText = if (aiAnswers.size == 1) {
-                aiAnswers.first().answer
-            } else {
-                aiAnswers.mapIndexed { index, ans ->
-                    "第 ${index + 1} 题：${ans.answer}"
-                }.joinToString("\n")
-            }
-            ctx?.copyToClipboard(copyText)
-        }
-
         answerText.value = formattedAnswer
         showAnswer.value = true
         floatingStatus.value = FloatingStatus.Success
-        statusMessage.value = if (autoCopy) "答案已复制" else "答案已生成"
+        statusMessage.value = "内容已生成"
         val msgAfterAnswer = statusMessage.value
         delay(2000)
         // 防呆：仅当消息未被后续流程覆盖时才清除，避免旧协程抹掉新状态
@@ -369,7 +360,6 @@ class FloatingWindowViewModel : ViewModel() {
     }
 
     private fun showRecordingResults() {
-        val autoCopy = AppConfig.getAutoCopy()
         val allEntries = recordingAnswers.value.sortedBy { it.first }
         if (allEntries.isEmpty()) {
             ctx?.showErrorToUser(ctx?.getString(R.string.recording_no_valid_answers) ?: "")
@@ -387,11 +377,6 @@ class FloatingWindowViewModel : ViewModel() {
             if (failed > 0) append("，${failed} 题获取失败")
         }
         statusMessage.value = resultSummary
-        if (autoCopy) {
-            val copyText = recordingCopyTexts.value.sortedBy { it.first }
-                .joinToString("\n") { it.second }
-            ctx?.copyToClipboard(copyText)
-        }
         isProcessingRecording.value = false
     }
 
@@ -429,9 +414,6 @@ class FloatingWindowViewModel : ViewModel() {
         } else {
             floatingStatus.value = FloatingStatus.GettingAnswer
             statusMessage.value = ctx?.getString(R.string.recording_processing, answers.size, total)
-        }
-        if (AppConfig.getAutoCopy()) {
-            ctx?.copyToClipboard(copyTexts.sortedBy { it.first }.joinToString("\n") { it.second })
         }
     }
 

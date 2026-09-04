@@ -3,11 +3,18 @@ package com.hwb.aianswerer
 import android.accessibilityservice.AccessibilityService
 import android.accessibilityservice.AccessibilityServiceInfo
 import android.content.Context
+import android.graphics.Bitmap
+import android.graphics.Rect
 import android.os.Build
 import android.view.accessibility.AccessibilityManager
 import android.view.accessibility.AccessibilityNodeInfo
 import android.view.accessibility.AccessibilityEvent
 import com.hwb.aianswerer.utils.AppLog
+import com.hwb.aianswerer.chat.model.NodeSource
+import com.hwb.aianswerer.chat.model.ScreenNode
+import kotlinx.coroutines.suspendCancellableCoroutine
+import kotlin.coroutines.resume
+import kotlin.coroutines.resumeWithException
 
 /**
  * 无障碍屏幕读取服务 — 通过 AccessibilityService 读取屏幕文本内容。
@@ -27,7 +34,10 @@ class ScreenReaderService : AccessibilityService() {
     }
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
-        // 不需要处理事件，只在主动调用时读取
+        // 仅记录最近前台包名；不在事件回调中读取或保存屏幕内容。
+        event?.packageName?.toString()?.takeIf { isUsableTargetPackage(it, packageName) }?.let {
+            lastForegroundPackage = it
+        }
     }
 
     override fun onInterrupt() {
@@ -43,6 +53,27 @@ class ScreenReaderService : AccessibilityService() {
     companion object {
         var instance: ScreenReaderService? = null
             private set
+
+        @Volatile private var lastForegroundPackage: String? = null
+        fun currentForegroundPackage(): String? = lastForegroundPackage
+
+        /** Reads the active app directly from accessibility windows before using the cached event package. */
+        fun currentWindowPackage(): String? {
+            val service = instance ?: return currentForegroundPackage()
+            @Suppress("DEPRECATION")
+            val activeWindow = service.windows.orEmpty().firstOrNull { it?.isActive == true }
+            val root = try { activeWindow?.root ?: service.rootInActiveWindow } catch (_: Exception) { null }
+            val resolved = try {
+                root?.packageName?.toString()?.takeIf { isUsableTargetPackage(it, service.packageName) }
+            } finally {
+                root?.recycle()
+            }
+            return resolved ?: currentForegroundPackage()?.takeIf { isUsableTargetPackage(it, service.packageName) }
+        }
+
+        private fun isUsableTargetPackage(value: String, ownPackage: String): Boolean =
+            value.isNotBlank() && value != ownPackage && value != "android" &&
+                value != "com.android.systemui" && value != "unknown.app"
 
         /** 服务是否已连接并可用 */
         val isActive: Boolean get() = instance != null
@@ -106,6 +137,100 @@ class ScreenReaderService : AccessibilityService() {
                 return text.ifEmpty { null }
             } finally {
                 rootNode.recycle()
+            }
+        }
+
+        /** Takes a one-shot accessibility snapshot with geometry for chat parsing. */
+        fun readScreenNodes(): List<ScreenNode> {
+            val service = instance ?: return emptyList()
+            val candidates = mutableListOf<Pair<Boolean, List<ScreenNode>>>()
+            @Suppress("DEPRECATION")
+            for (window in service.windows.orEmpty()) {
+                val root = try { window?.root } catch (_: Exception) { null } ?: continue
+                try {
+                    val rootPackage = root.packageName?.toString().orEmpty()
+                    if (!isUsableTargetPackage(rootPackage, service.packageName)) continue
+                    val snapshot = mutableListOf<ScreenNode>()
+                    collectNodes(root, snapshot)
+                    candidates.add((window.isActive) to snapshot)
+                } finally {
+                    root.recycle()
+                }
+            }
+            if (candidates.isNotEmpty()) {
+                return candidates.maxWithOrNull(compareBy<Pair<Boolean, List<ScreenNode>>> { it.first }.thenBy { it.second.size })
+                    ?.second.orEmpty()
+            }
+            val root = service.rootInActiveWindow ?: return emptyList()
+            return try {
+                mutableListOf<ScreenNode>().also { collectNodes(root, it) }
+            } finally { root.recycle() }
+        }
+
+        /**
+         * Captures the default display through the enabled accessibility service.
+         * Android does not show a MediaProjection confirmation for this API.
+         */
+        suspend fun captureScreenshot(): Bitmap {
+            val service = instance ?: throw IllegalStateException("无障碍服务未连接")
+            if (Build.VERSION.SDK_INT < Build.VERSION_CODES.R) {
+                throw IllegalStateException("当前 Android 版本不支持无障碍截图")
+            }
+            return suspendCancellableCoroutine { continuation ->
+                service.takeScreenshot(
+                    android.view.Display.DEFAULT_DISPLAY,
+                    service.mainExecutor,
+                    object : TakeScreenshotCallback {
+                        override fun onSuccess(result: ScreenshotResult) {
+                            val buffer = result.hardwareBuffer
+                            try {
+                                val hardwareBitmap = Bitmap.wrapHardwareBuffer(buffer, result.colorSpace)
+                                val bitmap = hardwareBitmap?.copy(Bitmap.Config.ARGB_8888, false)
+                                hardwareBitmap?.recycle()
+                                if (bitmap != null && continuation.isActive) continuation.resume(bitmap)
+                                else if (continuation.isActive) {
+                                    continuation.resumeWithException(IllegalStateException("无障碍截图转换失败"))
+                                }
+                            } catch (error: Exception) {
+                                if (continuation.isActive) continuation.resumeWithException(error)
+                            } finally {
+                                buffer.close()
+                            }
+                        }
+
+                        override fun onFailure(errorCode: Int) {
+                            if (continuation.isActive) {
+                                continuation.resumeWithException(
+                                    IllegalStateException("无障碍截图失败（错误码 $errorCode）")
+                                )
+                            }
+                        }
+                    }
+                )
+            }
+        }
+
+        private fun collectNodes(node: AccessibilityNodeInfo, output: MutableList<ScreenNode>) {
+            if (!node.isVisibleToUser) return
+            val text = node.text?.toString()?.trim().orEmpty()
+            if (text.isNotEmpty()) {
+                val bounds = Rect()
+                node.getBoundsInScreen(bounds)
+                if (!bounds.isEmpty) {
+                    output += ScreenNode(
+                        text = text,
+                        bounds = bounds,
+                        packageName = node.packageName?.toString().orEmpty(),
+                        className = node.className?.toString(),
+                        viewId = node.viewIdResourceName,
+                        contentDescription = node.contentDescription?.toString(),
+                        source = NodeSource.ACCESSIBILITY
+                    )
+                }
+            }
+            for (index in 0 until node.childCount) {
+                val child = node.getChild(index) ?: continue
+                try { collectNodes(child, output) } finally { child.recycle() }
             }
         }
 

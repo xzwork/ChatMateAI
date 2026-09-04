@@ -27,6 +27,7 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
 import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.graphics.SolidColor
 import androidx.compose.ui.graphics.graphicsLayer
 import androidx.compose.ui.res.stringResource
 import androidx.compose.ui.unit.dp
@@ -34,7 +35,7 @@ import com.hwb.aianswerer.R
 import com.hwb.aianswerer.ui.theme.*
 
 // ── Gradient helper ──
-private fun g(t: Th) = Brush.linearGradient(listOf(t.p, t.pe), Offset.Zero, Offset.Infinite)
+private fun g(t: Th) = SolidColor(t.p)
 
 @Composable
 fun CtaBar(
@@ -57,14 +58,8 @@ fun CtaBar(
     )
 
     val bg = when {
-        disabled -> Brush.linearGradient(
-            listOf(Color(0xFF9E9E9E), Color(0xFF757575)),
-            Offset.Zero, Offset.Infinite
-        )
-        isAnswerModeActive -> Brush.linearGradient(
-            listOf(Color(0xFFFF3B30), Color(0xFFD32F2F)),
-            Offset.Zero, Offset.Infinite
-        )
+        disabled -> SolidColor(Color(0xFF94A3B8))
+        isAnswerModeActive -> SolidColor(Color(0xFFDC2626))
         else -> g(t)
     }
 

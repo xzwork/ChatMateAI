@@ -1,6 +1,7 @@
 package com.hwb.aianswerer.ui.pages
 
 import androidx.compose.animation.core.*
+import androidx.compose.foundation.Image
 import androidx.compose.foundation.background
 import androidx.compose.foundation.border
 import androidx.compose.foundation.clickable
@@ -18,14 +19,14 @@ import androidx.compose.ui.draw.clip
 import androidx.compose.ui.draw.scale
 import androidx.compose.ui.geometry.Offset
 import androidx.compose.ui.graphics.Brush
-import androidx.compose.ui.graphics.Color
 import androidx.compose.ui.platform.LocalContext
-import androidx.compose.ui.text.TextStyle
+import androidx.compose.ui.res.painterResource
 import androidx.compose.ui.text.font.FontWeight
 import androidx.compose.ui.tooling.preview.Preview
 import androidx.compose.ui.unit.dp
 import androidx.compose.ui.unit.sp
 import com.hwb.aianswerer.BuildConfig
+import com.hwb.aianswerer.R
 import com.hwb.aianswerer.ui.icons.LocalIcons
 import com.hwb.aianswerer.ui.theme.*
 
@@ -75,16 +76,17 @@ fun AboutPage(t: Th, onBack: () -> Unit) {
             Spacer(Modifier.height(40.dp))
 
             // App icon
-            Box(Modifier.align(Alignment.CenterHorizontally)) {
-                Box(Modifier.size(72.dp).clip(RoundedCornerShape(18.dp))
-                    .background(Brush.linearGradient(listOf(t.p, t.pe), Offset.Zero, Offset.Infinite)),
-                    contentAlignment = Alignment.Center) {
-                    Text("AI", style = TextStyle(fontSize = 28.sp, fontWeight = FontWeight.Bold, color = Color.White))
-                }
-            }
+            Image(
+                painter = painterResource(R.drawable.chatmate_icon),
+                contentDescription = "ChatMate AI",
+                modifier = Modifier
+                    .align(Alignment.CenterHorizontally)
+                    .size(88.dp)
+                    .clip(RoundedCornerShape(24.dp))
+            )
 
             Spacer(Modifier.height(16.dp))
-            Text("FloatyAnswer", style = DW.TitleLarge.copy(color = t.ob, fontWeight = FontWeight.SemiBold),
+            Text("ChatMate AI", style = DW.TitleLarge.copy(color = t.ob, fontWeight = FontWeight.SemiBold),
                 modifier = Modifier.align(Alignment.CenterHorizontally))
 
             Spacer(Modifier.height(36.dp))
@@ -92,7 +94,7 @@ fun AboutPage(t: Th, onBack: () -> Unit) {
             // 应用简介
             Glass(Modifier.padding(horizontal = 20.dp).padding(bottom = 12.dp), t) {
                 Text("应用简介", style = DW.LabelSmall.copy(color = t.osv), modifier = Modifier.padding(bottom = 8.dp))
-                Text("FloatyAnswer 是一款 Android 端智能答题助手，支持截图识别题目、多模型并行作答、联网搜索增强。通过悬浮窗实现一键截屏与答案展示，覆盖单选、多选、填空、问答等题型。",
+                Text("ChatMate AI 是一款 Android AI 聊天辅助工具。它优先读取当前屏幕文字，必要时通过智能截图补充上下文，并在你确认后生成回复建议。",
                     style = DW.BodySmall.copy(color = t.ob, lineHeight = 20.sp))
             }
 

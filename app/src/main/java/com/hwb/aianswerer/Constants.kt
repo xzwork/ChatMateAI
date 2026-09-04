@@ -86,9 +86,11 @@ object Constants {
     // Intent Actions
     const val ACTION_SHOW_ANSWER = "com.hwb.aianswerer.SHOW_ANSWER"
     const val ACTION_REQUEST_ANSWER = "com.hwb.aianswerer.REQUEST_ANSWER"
+    const val ACTION_RECOGNIZE_WITH_SCREENSHOT = "com.hwb.aianswerer.RECOGNIZE_WITH_SCREENSHOT"
     const val ACTION_REFRESH_SETTINGS = "com.hwb.aianswerer.REFRESH_SETTINGS"
     const val EXTRA_ANSWER_TEXT = "answer_text"
     const val EXTRA_RECOGNIZED_TEXT = "recognized_text"
+    const val EXTRA_FROM_SCREEN_TEXT = "from_screen_text"
     const val EXTRA_QUESTION_TEXT = "question_text"
 
 
@@ -238,4 +240,3 @@ object Constants {
         }.toSet()
     }
 }
-

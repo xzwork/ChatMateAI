@@ -4,174 +4,117 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.Toast
 import androidx.activity.compose.setContent
-import androidx.compose.ui.res.stringResource
 import androidx.compose.foundation.background
-import androidx.compose.foundation.clickable
-import androidx.compose.foundation.interaction.MutableInteractionSource
-import androidx.compose.foundation.layout.Arrangement
-import androidx.compose.foundation.layout.Box
-import androidx.compose.foundation.layout.Column
-import androidx.compose.foundation.layout.Row
-import androidx.compose.foundation.layout.Spacer
-import androidx.compose.foundation.layout.fillMaxHeight
-import androidx.compose.foundation.layout.fillMaxSize
-import androidx.compose.foundation.layout.fillMaxWidth
-import androidx.compose.foundation.layout.height
-import androidx.compose.foundation.layout.padding
+import androidx.compose.foundation.border
+import androidx.compose.foundation.layout.*
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.shape.RoundedCornerShape
-import androidx.compose.material3.MaterialTheme
+import androidx.compose.foundation.verticalScroll
 import androidx.compose.material3.Text
-import androidx.compose.runtime.Composable
-import androidx.compose.runtime.getValue
-import androidx.compose.runtime.mutableStateOf
-import androidx.compose.runtime.remember
-import androidx.compose.runtime.setValue
+import androidx.compose.runtime.*
 import androidx.compose.ui.Alignment
 import androidx.compose.ui.Modifier
+import androidx.compose.ui.draw.clip
+import androidx.compose.ui.graphics.Brush
+import androidx.compose.ui.graphics.Color
+import androidx.compose.ui.unit.dp
 import com.hwb.aianswerer.config.AppConfig
 import com.hwb.aianswerer.ui.components.AnimatedButton
 import com.hwb.aianswerer.ui.components.AppTextField
 import com.hwb.aianswerer.ui.components.ButtonVariant
-import com.hwb.aianswerer.ui.components.CardRadius
 import com.hwb.aianswerer.ui.theme.*
 
-
-/**
- * 透明确认 Activity — 显示 OCR 识别文本供用户编辑，确认后通过本地广播
- * 将文本传回 FloatingWindowService 调用 AI 接口。
- */
+/** Shows recognition first. Generating content is always an explicit user action. */
 class ConfirmTextActivity : BaseActivity() {
-
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
-
-        val recognizedText = intent.getStringExtra(Constants.EXTRA_RECOGNIZED_TEXT) ?: ""
-
+        val recognizedText = intent.getStringExtra(Constants.EXTRA_RECOGNIZED_TEXT).orEmpty()
+        val fromScreenText = intent.getBooleanExtra(Constants.EXTRA_FROM_SCREEN_TEXT, false)
         setContent {
             AIAnswererTheme {
-                ConfirmTextScreen(
-                    recognizedText = recognizedText,
-                    onConfirm = { editedText ->
-                        handleConfirm(editedText)
-                    },
-                    onCancel = {
-                        finish()
-                    }
-                )
+                RecognitionResultScreen(recognizedText, fromScreenText, ::handleGenerate, ::retryWithScreenshot, ::finish)
             }
         }
     }
 
-    private fun handleConfirm(text: String) {
+    private fun retryWithScreenshot() {
+        sendBroadcast(Intent(Constants.ACTION_RECOGNIZE_WITH_SCREENSHOT).setPackage(packageName))
+        finish()
+    }
+
+    private fun handleGenerate(text: String) {
         if (text.isBlank()) {
-            Toast.makeText(this, getString(R.string.toast_text_empty), Toast.LENGTH_SHORT).show()
+            Toast.makeText(this, "识别内容不能为空", Toast.LENGTH_SHORT).show()
             return
         }
-
-        Toast.makeText(this, getString(R.string.toast_getting_answer), Toast.LENGTH_SHORT).show()
-
-        val intent = Intent(Constants.ACTION_REQUEST_ANSWER).apply {
+        if (!AppConfig.isApiConfigValid()) {
+            Toast.makeText(this, "生成内容前，请先配置 OpenAI 兼容模型", Toast.LENGTH_LONG).show()
+            startActivity(Intent(this, ModelSettingsActivity::class.java))
+            return
+        }
+        sendBroadcast(Intent(Constants.ACTION_REQUEST_ANSWER).apply {
             setPackage(packageName)
             putExtra(Constants.EXTRA_QUESTION_TEXT, text)
-        }
-        sendBroadcast(intent)
+        })
         finish()
     }
 }
 
-private const val CONFIRM_CARD_WIDTH = 0.92f
-private const val CONFIRM_CARD_HEIGHT = 0.80f
-
 @Composable
-fun ConfirmTextScreen(
+private fun RecognitionResultScreen(
     recognizedText: String,
-    onConfirm: (String) -> Unit,
+    fromScreenText: Boolean,
+    onGenerate: (String) -> Unit,
+    onRetryWithScreenshot: () -> Unit,
     onCancel: () -> Unit
 ) {
     var text by remember { mutableStateOf(recognizedText) }
-
-    val questionTypes = AppConfig.getQuestionTypes()
-    val settingsText = buildString {
-        append(questionTypes.joinToString("、"))
-    }
+    val sections = remember(text) { splitRecognitionResults(text) }
     val isDark = LocalIsDarkMode.current
+    val bg = if (isDark) Color(0xFF0F172A) else Color(0xFFF5F9FF)
 
-    Box(
-        modifier = Modifier
-            .fillMaxSize()
-            .background(PremiumBgDark.copy(alpha = 0.50f))
-            .clickable(
-                indication = null,
-                interactionSource = remember { MutableInteractionSource() }
-            ) { onCancel() },
-        contentAlignment = Alignment.Center
-    ) {
-        // Apple-style glass overlay card
-        val cardModifier = if (isDark) Modifier
-            .glassSurfaceDark(alpha = 0.07f, shape = RoundedCornerShape(CardRadius), cornerRadius = CardRadius)
-        else Modifier.glassOverlay(shape = RoundedCornerShape(CardRadius))
-        Box(
-            modifier = Modifier
-                .fillMaxWidth(CONFIRM_CARD_WIDTH)
-                .fillMaxHeight(CONFIRM_CARD_HEIGHT)
-                .then(cardModifier)
-        ) {
-            Column(
-                modifier = Modifier
-                    .fillMaxSize()
-                    .padding(Spacing.xl)
-            ) {
-                // 标题
-                Text(
-                    text = stringResource(R.string.confirm_text_title),
-                    style = MaterialTheme.typography.headlineSmall,
-                    color = if (isDark) TextDarkPrimary else TextDark,
-                    modifier = Modifier.padding(bottom = Spacing.xs)
-                )
+    Column(Modifier.fillMaxSize().background(bg).padding(top = 52.dp)) {
+        Row(Modifier.fillMaxWidth().padding(horizontal = 20.dp, vertical = 12.dp), verticalAlignment = Alignment.CenterVertically) {
+            Column(Modifier.weight(1f)) {
+                Text("识别结果", style = DW.TitleLarge.copy(color = if (isDark) TextDarkPrimary else TextDark))
+                Text("确认无误后再开始生成", style = DW.BodySmall.copy(color = if (isDark) TextDarkSecondary else TextSecondary))
+            }
+            Text("${sections.size} 项", style = DW.LabelMedium.copy(color = PremiumPrimary))
+        }
 
-                // 当前设置
-                Text(
-                    text = stringResource(R.string.current_settings, settingsText),
-                    style = MaterialTheme.typography.labelSmall,
-                    color = if (isDark) TextDarkTertiary else TextTertiary,
-                    modifier = Modifier.padding(bottom = Spacing.lg)
-                )
-
-                // 文本输入框 — 使用统一的 AppTextField
-                AppTextField(
-                    value = text,
-                    onValueChange = { text = it },
-                    label = stringResource(R.string.confirm_text_label),
-                    placeholder = stringResource(R.string.confirm_text_placeholder),
-                    singleLine = false,
-                    maxLines = Int.MAX_VALUE,
-                    modifier = Modifier
-                        .weight(1f)
-                        .fillMaxWidth()
-                )
-
-                Spacer(modifier = Modifier.height(Spacing.lg))
-
-                // 按钮行
-                Row(
-                    modifier = Modifier.fillMaxWidth(),
-                    horizontalArrangement = Arrangement.spacedBy(Spacing.md)
-                ) {
-                    AnimatedButton(
-                        text = stringResource(R.string.button_cancel),
-                        onClick = onCancel,
-                        modifier = Modifier.weight(1f),
-                        variant = ButtonVariant.Glass
-                    )
-
-                    AnimatedButton(
-                        text = stringResource(R.string.button_confirm_and_answer),
-                        onClick = { onConfirm(text) },
-                        modifier = Modifier.weight(1f),
-                        variant = ButtonVariant.Primary
-                    )
+        Column(Modifier.weight(1f).verticalScroll(rememberScrollState()).padding(horizontal = 20.dp)) {
+            sections.forEachIndexed { index, section ->
+                Row(Modifier.fillMaxWidth().padding(bottom = 10.dp).clip(RoundedCornerShape(18.dp))
+                    .background(if (isDark) GlassDark else GlassWhite)
+                    .border(1.dp, if (isDark) GlassDarkBorder else GlassWhiteBorder, RoundedCornerShape(18.dp))
+                    .padding(16.dp)) {
+                    Text("${index + 1}".padStart(2, '0'), style = DW.LabelSmall.copy(color = PremiumPrimary), modifier = Modifier.width(34.dp))
+                    Text(section, style = DW.BodyMedium.copy(color = if (isDark) TextDarkPrimary else TextDark), modifier = Modifier.weight(1f))
                 }
             }
+            Spacer(Modifier.height(4.dp))
+            AppTextField(text, { text = it }, "可编辑识别文本", "检查或修正识别结果", singleLine = false, maxLines = 12)
+            if (fromScreenText) {
+                Spacer(Modifier.height(12.dp))
+                AnimatedButton("使用智能截图重新识别", onRetryWithScreenshot, variant = ButtonVariant.Tonal)
+            }
+            Spacer(Modifier.height(18.dp))
+        }
+
+        Row(Modifier.fillMaxWidth().background(if (isDark) Color.Black.copy(alpha = .18f) else Color.White.copy(alpha = .38f))
+            .padding(horizontal = 20.dp, vertical = 14.dp), horizontalArrangement = Arrangement.spacedBy(12.dp)) {
+            AnimatedButton("取消", onCancel, Modifier.weight(.8f), ButtonVariant.Glass)
+            AnimatedButton("开始生成", { onGenerate(text) }, Modifier.weight(1.2f), ButtonVariant.Primary)
         }
     }
+}
+
+internal fun splitRecognitionResults(text: String): List<String> {
+    val normalized = text.trim()
+    if (normalized.isBlank()) return emptyList()
+    val blankLineParts = normalized.split(Regex("\\n\\s*\\n+")).map(String::trim).filter(String::isNotBlank)
+    if (blankLineParts.size > 1) return blankLineParts
+    val numbered = normalized.split(Regex("(?m)(?=^\\s*(?:第\\s*\\d+\\s*题|\\d+[.、)]))"))
+        .map(String::trim).filter(String::isNotBlank)
+    return numbered.ifEmpty { listOf(normalized) }
 }

@@ -54,9 +54,6 @@ class OpenAIClient {
             .connectTimeout(CONNECT_TIMEOUT_SEC, TimeUnit.SECONDS)
             .readTimeout(READ_TIMEOUT_SEC, TimeUnit.SECONDS)
             .writeTimeout(WRITE_TIMEOUT_SEC, TimeUnit.SECONDS)
-            .connectTimeout(15, TimeUnit.SECONDS)
-            .readTimeout(60, TimeUnit.SECONDS)
-            .writeTimeout(15, TimeUnit.SECONDS)
             .retryOnConnectionFailure(false)
             .apply {
                 if (com.hwb.aianswerer.BuildConfig.DEBUG) {
@@ -72,8 +69,8 @@ class OpenAIClient {
 
     /**
      * 长读超时客户端 — 专供 dedupeText（长文合并去重）：DeepSeek 等服务商对长输出
-     * 采用 200 响应头先返、body 流式生成的方式，共享 client 的 readTimeout(60s) 会在
-     * body 读取阶段超时（实测 SocketTimeoutException）。readTimeout 与 DEDUPE_TIMEOUT_MS 对齐。
+     * 采用 200 响应头先返、body 流式生成的方式，长文输出仍可能超过共享 client 的
+     * readTimeout。专用客户端的 readTimeout 与 DEDUPE_TIMEOUT_MS 对齐。
      */
     private val longReadClient: OkHttpClient by lazy {
         OkHttpClient.Builder()
@@ -201,7 +198,7 @@ class OpenAIClient {
                     .post(requestBody)
                     .build()
 
-                // 流式请求，60s Kotlin 层超时兜底（每轮独立超时）
+                // 流式请求，180s Kotlin 层超时兜底（每轮独立超时）
                 val streamResult = withTimeout(WITH_TIMEOUT_MS) {
                     client.newCall(request).awaitStreamContent()
                 }
@@ -425,8 +422,8 @@ class OpenAIClient {
                 .post(body)
                 .build()
 
-            // 长文去重输出（16384 tokens）在 60s 内可能生成不完，放宽到 240s
-            // 必须用 longReadClient：共享 client 的 readTimeout=60s 会在 body 流式读取阶段超时（实测 SocketTimeoutException）
+            // 长文去重输出（16384 tokens）可能耗时较长，放宽到 300s。
+            // 必须用 longReadClient，避免共享客户端在长输出完成前超时。
             val response = withTimeout(DEDUPE_TIMEOUT_MS) {
                 longReadClient.newCall(httpRequest).execute()
             }
@@ -657,11 +654,11 @@ class OpenAIClient {
     companion object {
         // 超时常量：readTimeout 与 Kotlin 层 withTimeout 必须对齐，
         // 避免 OkHttp 先于协程超时导致不可取消的 SocketTimeoutException。
-        const val READ_TIMEOUT_SEC = 60L
-        const val CALL_TIMEOUT_SEC = 65L
-        const val WITH_TIMEOUT_MS = 60_000L
-        /** 去重 LLM（长文合并）外层超时 — 输出上限 16384 tokens，长文材料生成慢，放宽至 240s */
-        const val DEDUPE_TIMEOUT_MS = 240_000L
+        const val READ_TIMEOUT_SEC = 180L
+        const val CALL_TIMEOUT_SEC = 190L
+        const val WITH_TIMEOUT_MS = 180_000L
+        /** 去重 LLM（长文合并）外层超时 — 输出上限 16384 tokens，长文材料生成慢，放宽至 300s */
+        const val DEDUPE_TIMEOUT_MS = 300_000L
         const val CONNECT_TIMEOUT_SEC = 15L
         const val WRITE_TIMEOUT_SEC = 15L
         const val TEST_TIMEOUT_MS = 30_000L
@@ -983,4 +980,3 @@ private suspend fun Call.awaitCancellable(): Response =
         })
         AppLog.d("API", "enqueue sent")
     }
-
