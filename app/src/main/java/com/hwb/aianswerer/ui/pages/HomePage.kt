@@ -103,7 +103,7 @@ fun HomePage(
             Text("聊天配置", style = DW.LabelSmall.copy(color = t.osv), modifier = Modifier.padding(start = 4.dp, top = 8.dp))
             HomeEntry(t, "API 配置", "模型、地址与密钥", t.p, onApiConfigClick)
             HomeEntry(t, "系统提示词", "设置默认回复方式", t.ac, onSystemPromptClick)
-            HomeEntry(t, "会话管理", "联系人、历史与个性化配置", t.p, onConversationsClick)
+            HomeEntry(t, "聊天记录", "查找联系人、查看对话与回复偏好", t.p, onConversationsClick)
         }
 
         Box(Modifier.fillMaxWidth().background(t.bg1)) {

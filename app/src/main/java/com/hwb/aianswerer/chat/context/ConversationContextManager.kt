@@ -13,11 +13,7 @@ class ConversationContextManager(private val dao: ChatDao) {
         val key = ConversationKeyNormalizer.normalize(resolved.conversationKey)
         val conversation = resolveExisting(app.id, key, resolved.displayName, screen.messages)
             ?: dao.getOrCreateConversation(app.id, key, resolved.displayName, resolved.type.name)
-        if (conversation.displayName != resolved.displayName && !ConversationKeyNormalizer.isGeneric(resolved.displayName)) {
-            dao.updateConversation(conversation.copy(displayName = resolved.displayName, lastSeenAt = System.currentTimeMillis()))
-        } else {
-            dao.updateConversation(conversation.copy(lastSeenAt = System.currentTimeMillis()))
-        }
+        dao.updateConversation(conversation.copy(lastSeenAt = System.currentTimeMillis()))
         val old = dao.recentMessagesDescending(conversation.id, 80).reversed().map {
             ChatMessage(it.id, it.conversationId, enumValueOf(it.role), it.content, it.timestamp, enumValueOf(it.source))
         }
@@ -39,11 +35,9 @@ class ConversationContextManager(private val dao: ChatDao) {
         incoming: List<ChatMessage>
     ): ConversationEntity? {
         val candidates = dao.conversationsForApp(appId)
-        val displayKey = ConversationKeyNormalizer.normalize(displayName)
 
         val exactMatches = if (ConversationKeyNormalizer.isGeneric(displayName)) emptyList() else candidates.filter {
-            ConversationKeyNormalizer.normalize(it.conversationKey) == key ||
-                ConversationKeyNormalizer.normalize(it.displayName) == displayKey
+            ConversationKeyNormalizer.normalize(it.conversationKey) == key
         }
         if (exactMatches.isNotEmpty()) {
             val canonical = exactMatches.maxBy { it.lastSeenAt }
@@ -53,10 +47,8 @@ class ConversationContextManager(private val dao: ChatDao) {
             return canonical
         }
 
-        candidates.firstOrNull {
-            ConversationKeyNormalizer.isSame(ConversationKeyNormalizer.normalize(it.conversationKey), key) ||
-                ConversationKeyNormalizer.isSame(ConversationKeyNormalizer.normalize(it.displayName), displayKey)
-        }?.let { return it }
+        // Named conversations are isolated: fuzzy names and common greetings can join strangers.
+        if (!ConversationKeyNormalizer.isGeneric(displayName)) return null
 
         val best = candidates.map { candidate ->
             val old = dao.recentMessagesDescending(candidate.id, 30).reversed().map {

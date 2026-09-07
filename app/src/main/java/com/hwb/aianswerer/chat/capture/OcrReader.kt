@@ -11,7 +11,12 @@ import kotlinx.coroutines.suspendCancellableCoroutine
 import kotlin.coroutines.resume
 
 class OcrReader {
-    private val recognizer = TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
+    companion object {
+        // ScreenCaptureEngine is short-lived. Load and reuse OCR only when a fallback actually needs it.
+        private val recognizer by lazy {
+            TextRecognition.getClient(ChineseTextRecognizerOptions.Builder().build())
+        }
+    }
 
     suspend fun read(bitmap: Bitmap, packageName: String): List<ScreenNode> = suspendCancellableCoroutine { continuation ->
         recognizer.process(InputImage.fromBitmap(bitmap, 0))

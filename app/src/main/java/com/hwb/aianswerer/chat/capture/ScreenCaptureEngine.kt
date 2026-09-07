@@ -3,7 +3,11 @@ package com.hwb.aianswerer.chat.capture
 import android.content.Context
 import com.hwb.aianswerer.ScreenCaptureManager
 import com.hwb.aianswerer.ScreenReaderService
-import com.hwb.aianswerer.chat.ChatSession
+import com.hwb.aianswerer.chat.parser.GenericChatParser
+import com.hwb.aianswerer.chat.profile.AppProfileManager
+import com.hwb.aianswerer.chat.model.MessageRole
+import android.graphics.Rect
+import kotlinx.coroutines.CancellationException
 import com.hwb.aianswerer.chat.model.ScreenNode
 import com.hwb.aianswerer.config.AppConfig
 import kotlinx.coroutines.Dispatchers
@@ -35,7 +39,14 @@ class ScreenCaptureEngine(
         val accessibilityNodes = ScreenReaderService.readScreenNodes()
         val accessibilityPackage = accessibilityNodes.groupingBy { it.packageName }
             .eachCount().filterKeys(::isUsablePackage).maxByOrNull { it.value }?.key
-        val hasReadableScreen = accessibilityNodes.count { it.text.isNotBlank() } >= 3 && accessibilityPackage != null
+        val parsed = accessibilityPackage?.let { pkg ->
+            GenericChatParser().parse(pkg, pkg, accessibilityNodes, metrics.widthPixels, metrics.heightPixels,
+                AppProfileManager.forPackage(pkg, pkg))
+        }
+        val hasReadableScreen = parsed?.let { screen ->
+            screen.pageDetection.isLikelyChat && screen.messages.isNotEmpty() &&
+                screen.messages.count { it.role == MessageRole.UNKNOWN } <= screen.messages.size / 3
+        } == true
         val effectiveMode = if (forceScreenshot) AppConfig.CAPTURE_MODE_SCREENSHOT else captureMode
 
         if (effectiveMode != AppConfig.CAPTURE_MODE_SCREENSHOT && hasReadableScreen) {
@@ -49,15 +60,28 @@ class ScreenCaptureEngine(
             ?: ScreenReaderService.currentWindowPackage()
             ?: currentForegroundPackage(accessibilityNodes)
             ?: ScreenReaderService.currentForegroundPackage()?.takeIf(::isUsablePackage)
-            ?: ChatSession.active?.screen?.conversation?.packageName?.takeIf(::isUsablePackage)
             ?: "screen.capture"
-        val accessibilityBitmap = runCatching { ScreenReaderService.captureScreenshot() }.getOrNull()
+        val accessibilityBitmap = try { ScreenReaderService.captureScreenshot() }
+        catch (cancelled: CancellationException) { throw cancelled }
+        catch (_: Exception) { null }
         val bitmap = accessibilityBitmap
             ?: screenCaptureManager?.takeIf { it.isReady }?.captureScreen()
             ?: throw ScreenshotPermissionRequiredException()
+        val width = bitmap.width
+        val height = bitmap.height
         val nodes = try { ocrReader.read(bitmap, packageName) } finally { if (!bitmap.isRecycled) bitmap.recycle() }
+        // Keep composer/avatar geometry from accessibility, using the screenshot coordinate space.
+        val anchors = accessibilityNodes.filter { it.packageName == packageName &&
+            (it.isEditable || it.contentDescription?.contains("头像") == true ||
+                it.contentDescription?.contains("avatar", ignoreCase = true) == true) }.map {
+            fun x(value: Int) = value * width / metrics.widthPixels.coerceAtLeast(1)
+            fun y(value: Int) = value * height / metrics.heightPixels.coerceAtLeast(1)
+            it.copy(text = "", bounds = Rect(x(it.bounds.left), y(it.bounds.top), x(it.bounds.right), y(it.bounds.bottom)))
+        }
+        val composerTop = anchors.filter { it.isEditable }.minOfOrNull { it.bounds.top }
+        val chatNodes = nodes.filter { composerTop == null || it.bounds.bottom <= composerTop } + anchors
         if (nodes.isEmpty()) throw IllegalStateException("无法识别当前聊天内容")
-        return snapshot(packageName, nodes, metrics.widthPixels, metrics.heightPixels, true)
+        return snapshot(packageName, chatNodes, width, height, true)
     }
 
     private fun currentForegroundPackage(nodes: List<ScreenNode>): String? =

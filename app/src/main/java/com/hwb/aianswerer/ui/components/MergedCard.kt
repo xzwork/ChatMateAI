@@ -121,10 +121,10 @@ internal fun MergedCard(t: Th, expandedMenu: MutableState<String?>) {
             HorizontalDivider(color = t.ac.copy(alpha = 0.15f), thickness = 0.5.dp, modifier = Modifier.padding(vertical = 16.dp))
 
             // ── Lower: 2×2 model selectors ──
-            val langEx = derivedStateOf { expandedMenu.value == "语言模型" }
-            val webEx = derivedStateOf { expandedMenu.value == "联网搜索" }
-            val vlmEx = derivedStateOf { expandedMenu.value == "VLM 模型" }
-            val outEx = derivedStateOf { expandedMenu.value == "输出语言" }
+            val langEx = remember(expandedMenu) { derivedStateOf { expandedMenu.value == "语言模型" } }
+            val webEx = remember(expandedMenu) { derivedStateOf { expandedMenu.value == "联网搜索" } }
+            val vlmEx = remember(expandedMenu) { derivedStateOf { expandedMenu.value == "VLM 模型" } }
+            val outEx = remember(expandedMenu) { derivedStateOf { expandedMenu.value == "输出语言" } }
 
             Row(Modifier.fillMaxWidth().zIndex(2f), horizontalArrangement = Arrangement.spacedBy(10.dp)) {
                 ModelMenu("语言模型", language, textMenuModels.ifEmpty { listOf(llmDefault) }, langEx, t, Modifier.weight(1f)) { expandedMenu.value = if (expandedMenu.value == "语言模型") null else "语言模型" }

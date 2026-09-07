@@ -87,7 +87,9 @@
             android:theme="@style/Theme.AIAnswerer" />
 
         <!-- AI 聊天伴侣 -->
-        <activity android:name=".chat.ui.ChatCompanionActivity" android:exported="false" />
+        <activity android:name=".chat.ui.ChatCompanionActivity" android:exported="false"
+            android:taskAffinity="" android:excludeFromRecents="true"
+            android:windowSoftInputMode="adjustResize" />
         <activity android:name=".chat.ui.ChatDebugActivity" android:exported="false" />
         <activity android:name=".chat.ui.ChatSettingsActivity" android:exported="false" />
         <activity android:name=".chat.ui.SystemPromptSettingsActivity" android:exported="false" />

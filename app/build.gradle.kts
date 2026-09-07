@@ -112,6 +112,8 @@ android {
 
     buildTypes {
         debug {
+            // Optional isolated install for device QA; regular debug builds keep their existing ID.
+            applicationIdSuffix = providers.gradleProperty("chatmateDebugSuffix").orNull ?: ""
             isDebuggable = true
         }
         release {
@@ -155,6 +157,7 @@ dependencies {
     testImplementation(libs.robolectric)
     androidTestImplementation(libs.androidx.junit)
     androidTestImplementation(libs.androidx.espresso.core)
+    androidTestImplementation(libs.mockwebserver)
 
     // ML Kit for text recognition (Chinese recognizer supports Latin text)
     implementation(libs.mlkit.text.recognition.chinese)

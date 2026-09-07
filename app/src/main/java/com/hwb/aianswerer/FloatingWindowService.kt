@@ -352,13 +352,9 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
         filter.addAction(Constants.ACTION_RECOGNIZE_WITH_SCREENSHOT)
         filter.addAction(ACTION_CROP_RESULT)
         filter.addAction(Constants.ACTION_REFRESH_SETTINGS)
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
-            registerReceiver(answerReceiver, filter, RECEIVER_NOT_EXPORTED)
-        } else {
-            // API 26-32: 接收方无法指定 NOT_EXPORTED，但所有发送方均已 setPackage(packageName)
-            // （ConfirmTextActivity/ImageCropActivity/MainActivity），外部应用无法注入，安全性由发送方保证
-            registerReceiver(answerReceiver, filter)
-        }
+        androidx.core.content.ContextCompat.registerReceiver(
+            this, answerReceiver, filter, androidx.core.content.ContextCompat.RECEIVER_NOT_EXPORTED
+        )
     }
 
     override fun onStartCommand(intent: Intent?, flags: Int, startId: Int): Int {
@@ -574,7 +570,8 @@ class FloatingWindowService : Service(), LifecycleOwner, ViewModelStoreOwner,
                     snapshot.packageName, snapshot.appName, snapshot.nodes,
                     snapshot.screenWidth, snapshot.screenHeight, profile
                 )
-                if (parsed.messages.isEmpty()) error("无法提取当前屏幕的聊天消息")
+                if (!parsed.pageDetection.isLikelyChat) error(parsed.pageDetection.reason)
+                if (parsed.messages.isEmpty()) error("没有读到消息，请露出最近聊天后重试")
                 val (conversationId, history) = ConversationContextManager(
                     ChatDatabase.get(this@FloatingWindowService).chatDao()
                 ).merge(parsed)

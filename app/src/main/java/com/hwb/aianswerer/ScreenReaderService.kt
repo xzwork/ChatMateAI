@@ -35,7 +35,8 @@ class ScreenReaderService : AccessibilityService() {
 
     override fun onAccessibilityEvent(event: AccessibilityEvent?) {
         // 仅记录最近前台包名；不在事件回调中读取或保存屏幕内容。
-        event?.packageName?.toString()?.takeIf { isUsableTargetPackage(it, packageName) }?.let {
+        if (event?.eventType != AccessibilityEvent.TYPE_WINDOW_STATE_CHANGED) return
+        event.packageName?.toString()?.takeIf { isUsableTargetPackage(it, packageName) }?.let {
             lastForegroundPackage = it
         }
     }
@@ -61,7 +62,10 @@ class ScreenReaderService : AccessibilityService() {
         fun currentWindowPackage(): String? {
             val service = instance ?: return currentForegroundPackage()
             @Suppress("DEPRECATION")
-            val activeWindow = service.windows.orEmpty().firstOrNull { it?.isActive == true }
+            val appWindows = service.windows.orEmpty().filter {
+                it.type == android.view.accessibility.AccessibilityWindowInfo.TYPE_APPLICATION
+            }
+            val activeWindow = appWindows.firstOrNull { it.isActive } ?: appWindows.firstOrNull()
             val root = try { activeWindow?.root ?: service.rootInActiveWindow } catch (_: Exception) { null }
             val resolved = try {
                 root?.packageName?.toString()?.takeIf { isUsableTargetPackage(it, service.packageName) }
@@ -71,9 +75,11 @@ class ScreenReaderService : AccessibilityService() {
             return resolved ?: currentForegroundPackage()?.takeIf { isUsableTargetPackage(it, service.packageName) }
         }
 
-        private fun isUsableTargetPackage(value: String, ownPackage: String): Boolean =
-            value.isNotBlank() && value != ownPackage && value != "android" &&
-                value != "com.android.systemui" && value != "unknown.app"
+        private fun isUsableTargetPackage(value: String, ownPackage: String): Boolean {
+            if (value.isBlank() || value == ownPackage || value in setOf("android", "com.android.systemui", "unknown.app")) return false
+            val inputManager = instance?.getSystemService(Context.INPUT_METHOD_SERVICE) as? android.view.inputmethod.InputMethodManager
+            return inputManager?.enabledInputMethodList.orEmpty().none { it.packageName == value }
+        }
 
         /** 服务是否已连接并可用 */
         val isActive: Boolean get() = instance != null
@@ -146,7 +152,8 @@ class ScreenReaderService : AccessibilityService() {
             val candidates = mutableListOf<Pair<Boolean, List<ScreenNode>>>()
             @Suppress("DEPRECATION")
             for (window in service.windows.orEmpty()) {
-                val root = try { window?.root } catch (_: Exception) { null } ?: continue
+                if (window.type != android.view.accessibility.AccessibilityWindowInfo.TYPE_APPLICATION) continue
+                val root = try { window.root } catch (_: Exception) { null } ?: continue
                 try {
                     val rootPackage = root.packageName?.toString().orEmpty()
                     if (!isUsableTargetPackage(rootPackage, service.packageName)) continue
@@ -190,7 +197,7 @@ class ScreenReaderService : AccessibilityService() {
                                 if (bitmap != null && continuation.isActive) continuation.resume(bitmap)
                                 else if (continuation.isActive) {
                                     continuation.resumeWithException(IllegalStateException("无障碍截图转换失败"))
-                                }
+                                } else bitmap?.recycle()
                             } catch (error: Exception) {
                                 if (continuation.isActive) continuation.resumeWithException(error)
                             } finally {
@@ -211,9 +218,9 @@ class ScreenReaderService : AccessibilityService() {
         }
 
         private fun collectNodes(node: AccessibilityNodeInfo, output: MutableList<ScreenNode>) {
-            if (!node.isVisibleToUser) return
+            if (!node.isVisibleToUser || node.isPassword) return
             val text = node.text?.toString()?.trim().orEmpty()
-            if (text.isNotEmpty()) {
+            if (text.isNotEmpty() || node.isEditable || !node.contentDescription.isNullOrBlank()) {
                 val bounds = Rect()
                 node.getBoundsInScreen(bounds)
                 if (!bounds.isEmpty) {
@@ -224,7 +231,9 @@ class ScreenReaderService : AccessibilityService() {
                         className = node.className?.toString(),
                         viewId = node.viewIdResourceName,
                         contentDescription = node.contentDescription?.toString(),
-                        source = NodeSource.ACCESSIBILITY
+                        source = NodeSource.ACCESSIBILITY,
+                        isEditable = node.isEditable,
+                        isClickable = node.isClickable
                     )
                 }
             }

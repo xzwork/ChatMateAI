@@ -13,7 +13,9 @@ data class ScreenNode(
     val className: String? = null,
     val viewId: String? = null,
     val contentDescription: String? = null,
-    val source: NodeSource
+    val source: NodeSource,
+    val isEditable: Boolean = false,
+    val isClickable: Boolean = false
 )
 
 data class ChatMessage(

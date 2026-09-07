@@ -15,6 +15,8 @@ class ChatAssistantTileService : TileService() {
         updateTile()
     }
 
+    // The Intent overload is required below API 34; the API 34+ branch uses PendingIntent.
+    @android.annotation.SuppressLint("StartActivityAndCollapseDeprecated")
     override fun onClick() {
         super.onClick()
         if (FloatingWindowService.isRunning) {

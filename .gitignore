@@ -131,3 +131,12 @@ gradle/gradle-daemon-jvm.properties
 
 # Local unit test reports (build artifacts)
 测试报告/
+
+# Reviewed chat UX documentation and synthetic device screenshots
+!docs/
+docs/*
+!docs/chat-experience.md
+!docs/screenshots/
+docs/screenshots/*
+!docs/screenshots/chat-history.png
+!docs/screenshots/chat-reply.png

@@ -6,6 +6,10 @@ import com.google.gson.JsonElement
 import com.google.gson.JsonParser
 import com.hwb.aianswerer.utils.JsonUtil
 import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.CoroutineStart
+import kotlinx.coroutines.awaitCancellation
+import kotlinx.coroutines.coroutineScope
+import kotlinx.coroutines.launch
 import kotlinx.coroutines.currentCoroutineContext
 import kotlinx.coroutines.ensureActive
 import kotlinx.coroutines.withContext
@@ -16,13 +20,7 @@ import okhttp3.Request
 import okhttp3.RequestBody.Companion.toRequestBody
 import java.util.concurrent.TimeUnit
 
-class ChatAIClient {
-    private val client = OkHttpClient.Builder()
-        .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .writeTimeout(WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .callTimeout(CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
-        .build()
+class ChatAIClient(private val client: OkHttpClient = defaultClient()) {
 
     suspend fun generate(
         config: ResolvedAIConfig,
@@ -58,15 +56,20 @@ class ChatAIClient {
                 .header("Cache-Control", "no-cache")
                 .post(JsonUtil.gson.toJson(body).toRequestBody("application/json; charset=utf-8".toMediaType()))
                 .build()
-            client.newCall(request).execute().use { response ->
-                if (!response.isSuccessful) {
-                    val raw = response.body?.string().orEmpty()
-                    error("HTTP ${response.code}: ${raw.take(300)}")
+            val call = client.newCall(request)
+            coroutineScope {
+                val cancellation = launch(start = CoroutineStart.UNDISPATCHED) {
+                    try { awaitCancellation() } finally { call.cancel() }
                 }
-                val responseBody = response.body ?: error("模型未返回内容")
-                readResponse(responseBody, onContent)
+                try {
+                    call.execute().use { response ->
+                        if (!response.isSuccessful) error("模型服务返回 HTTP ${response.code}")
+                        val responseBody = response.body ?: error("模型未返回内容")
+                        readResponse(responseBody, onContent)
+                    }
+                } finally { cancellation.cancel() }
             }
-        }
+        }.also { currentCoroutineContext().ensureActive() }
     }
 
     /** Supports normal OpenAI SSE and falls back to a non-stream JSON response. */
@@ -175,6 +178,13 @@ class ChatAIClient {
     }
 
     companion object {
+        private fun defaultClient() = OkHttpClient.Builder()
+            .connectTimeout(CONNECT_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .readTimeout(READ_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .writeTimeout(WRITE_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .callTimeout(CALL_TIMEOUT_SECONDS, TimeUnit.SECONDS)
+            .build()
+
         const val CONNECT_TIMEOUT_SECONDS = 30L
         const val READ_TIMEOUT_SECONDS = 300L
         const val WRITE_TIMEOUT_SECONDS = 30L

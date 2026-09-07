@@ -125,7 +125,7 @@ interface ChatDao {
 
     @Query("DELETE FROM conversations WHERE id = :id") suspend fun deleteConversation(id: Long)
     @Query("DELETE FROM chat_apps WHERE id = :id") suspend fun deleteApp(id: Long)
-    @Query("UPDATE conversations SET displayName = :name, conversationKey = :name WHERE id = :id")
+    @Query("UPDATE conversations SET displayName = :name WHERE id = :id")
     suspend fun renameConversation(id: Long, name: String)
 
     @Query("UPDATE chat_messages SET conversationId = :targetId WHERE conversationId = :sourceId")
@@ -134,7 +134,9 @@ interface ChatDao {
     @Transaction
     suspend fun mergeConversations(sourceId: Long, targetId: Long) {
         require(sourceId != targetId)
-        require(conversation(sourceId) != null && conversation(targetId) != null)
+        val source = requireNotNull(conversation(sourceId))
+        val target = requireNotNull(conversation(targetId))
+        require(source.appId == target.appId) { "只能合并同一 App 的联系人" }
         moveMessages(sourceId, targetId)
         val sourceConfig = aiConfig(sourceId)
         if (aiConfig(targetId) == null && sourceConfig != null) saveAIConfig(sourceConfig.copy(conversationId = targetId))
@@ -151,7 +153,7 @@ interface ChatDao {
     @Transaction
     suspend fun getOrCreateConversation(appId: Long, key: String, name: String, type: String): ConversationEntity {
         findConversation(appId, key)?.let {
-            val updated = it.copy(displayName = name, lastSeenAt = System.currentTimeMillis())
+            val updated = it.copy(lastSeenAt = System.currentTimeMillis())
             updateConversation(updated)
             return updated
         }

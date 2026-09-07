@@ -6,6 +6,8 @@ import android.content.Intent
 import android.os.Bundle
 import androidx.activity.compose.setContent
 import androidx.compose.foundation.background
+import androidx.compose.foundation.horizontalScroll
+import androidx.compose.foundation.rememberScrollState
 import androidx.compose.foundation.clickable
 import androidx.compose.foundation.layout.*
 import androidx.compose.foundation.lazy.LazyColumn
@@ -47,6 +49,10 @@ class ChatSettingsActivity : BaseActivity() {
                 var summaries by remember { mutableStateOf(emptyList<ConversationSummary>()) }
                 var deleteTarget by remember { mutableStateOf<DeleteTarget?>(null) }
                 var menuConversationId by remember { mutableStateOf<Long?>(null) }
+                var query by remember { mutableStateOf("") }
+                var appFilter by remember { mutableStateOf<String?>(null) }
+                val filtered = summaries.filter { (appFilter == null || it.packageName == appFilter) &&
+                    (query.isBlank() || it.displayName.contains(query, true) || it.lastMessage.contains(query, true)) }
                 val scope = rememberCoroutineScope()
                 val pageBackground = MaterialTheme.colorScheme.surfaceVariant.copy(alpha = .38f)
 
@@ -60,7 +66,7 @@ class ChatSettingsActivity : BaseActivity() {
                     containerColor = pageBackground,
                     topBar = {
                         TopAppBar(
-                            title = { Text("会话管理", fontWeight = FontWeight.SemiBold) },
+                            title = { Text("聊天记录", fontWeight = FontWeight.SemiBold) },
                             navigationIcon = { TextButton(onClick = { finish() }) { Text("返回") } },
                             colors = TopAppBarDefaults.topAppBarColors(
                                 containerColor = MaterialTheme.colorScheme.surface
@@ -97,7 +103,20 @@ class ChatSettingsActivity : BaseActivity() {
                                     color = MaterialTheme.colorScheme.onSurfaceVariant
                                 )
                             }
-                            itemsIndexed(summaries, key = { _, item -> item.id }) { index, item ->
+                            item {
+                                OutlinedTextField(query, { query = it }, placeholder = { Text("搜索联系人或聊天内容") },
+                                    modifier = Modifier.fillMaxWidth().padding(horizontal = 16.dp), singleLine = true,
+                                    shape = RoundedCornerShape(12.dp))
+                                Row(Modifier.horizontalScroll(rememberScrollState()).padding(horizontal = 16.dp),
+                                    horizontalArrangement = Arrangement.spacedBy(8.dp)) {
+                                    FilterChip(appFilter == null, { appFilter = null }, label = { Text("全部") })
+                                    summaries.distinctBy { it.packageName }.forEach { app ->
+                                        FilterChip(appFilter == app.packageName, { appFilter = app.packageName }, label = { Text(app.appName) })
+                                    }
+                                }
+                                if (filtered.isEmpty()) Text("没有找到匹配的聊天", modifier = Modifier.padding(24.dp))
+                            }
+                            itemsIndexed(filtered, key = { _, item -> item.id }) { index, item ->
                                 ConversationListRow(
                                     item = item,
                                     menuExpanded = menuConversationId == item.id,
@@ -118,7 +137,7 @@ class ChatSettingsActivity : BaseActivity() {
                                         deleteTarget = DeleteTarget.App(item.appId, item.appName)
                                     }
                                 )
-                                if (index != summaries.lastIndex) {
+                                if (index != filtered.lastIndex) {
                                     HorizontalDivider(
                                         modifier = Modifier.padding(start = 84.dp),
                                         color = MaterialTheme.colorScheme.outlineVariant.copy(alpha = .55f)

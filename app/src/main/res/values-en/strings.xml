@@ -494,4 +494,7 @@ Output only the cleaned complete text itself, with no explanations, markers, or 
 Try: check API config, restart app, or export logs</string>
     <string name="error_multi_question_all_failed">All items failed; check the API configuration</string>
     <string name="error_multi_question_partial">%1$d succeeded, %2$d failed</string>
+    <string name="quick_toggle_vlm">Vision model</string>
+    <string name="quick_toggle_search">Web search</string>
+    <string name="quick_toggle_reasoning">Deep thinking</string>
 </resources>
